@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenk决策智能体</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050a12;
+            --bg-secondary: #0a1628;
+            --fg: #e8f0ff;
+            --muted: #4a6b8a;
+            --accent: #00e5a0;
+            --accent-secondary: #00b4d8;
+            --accent-warm: #ff6b35;
+            --accent-gold: #f59e0b;
+            --card: rgba(10, 22, 40, 0.8);
+            --border: rgba(0, 229, 160, 0.2);
+            --glow: rgba(0, 229, 160, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-tech { font-family: 'Orbitron', monospace; }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 229, 160, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 160, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-radial {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 180, 216, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 20% 80%, rgba(0, 229, 160, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 30% at 80% 60%, rgba(255, 107, 53, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glass-card {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 229, 160, 0.5);
+            box-shadow: 0 0 40px var(--glow), inset 0 1px 0 rgba(255,255,255,0.05);
+            transform: translateY(-4px);
+        }
+
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: rgba(0, 229, 160, 0.1);
+            border: 1px solid rgba(0, 229, 160, 0.3);
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--accent);
+            transition: all 0.3s;
+        }
+
+        .skill-tag:hover {
+            background: rgba(0, 229, 160, 0.2);
+            transform: scale(1.05);
+        }
+
+        .public-skill-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.15) 0%, rgba(0, 229, 160, 0.08) 100%);
+            border: 1px solid rgba(0, 180, 216, 0.4);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #00b4d8;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .public-skill-tag:hover {
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.25) 0%, rgba(0, 229, 160, 0.15) 100%);
+            transform: translateY(-2px);
+        }
+
+        .zenk-skill-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.08) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #fbbf24;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .zenk-skill-tag:hover {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(251, 191, 36, 0.15) 100%);
+            transform: translateY(-2px);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .stagger-children > * { opacity: 0; transform: translateY(20px); }
+        .stagger-children.active > *:nth-child(1) { animation: fadeUp 0.6s 0.1s forwards; }
+        .stagger-children.active > *:nth-child(2) { animation: fadeUp 0.6s 0.2s forwards; }
+        .stagger-children.active > *:nth-child(3) { animation: fadeUp 0.6s 0.3s forwards; }
+        .stagger-children.active > *:nth-child(4) { animation: fadeUp 0.6s 0.4s forwards; }
+        .stagger-children.active > *:nth-child(5) { animation: fadeUp 0.6s 0.5s forwards; }
+        .stagger-children.active > *:nth-child(n+6) { animation: fadeUp 0.6s 0.6s forwards; }
+
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        .glow-text { text-shadow: 0 0 20px var(--accent), 0 0 40px rgba(0, 229, 160, 0.3); }
+
+        .pulse-ring { animation: pulseRing 2s ease-out infinite; }
+        @keyframes pulseRing { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+
+        @media (max-width: 768px) {
+            .desktop-layout { flex-direction: column !important; }
+            .architecture-section { min-height: auto !important; }
+            .connection-lines, .cross-section-lines { display: none !important; }
+        }
+
+        @keyframes badgePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(0, 180, 216, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(0, 180, 216, 0); } }
+        .badge-pulse-cyan { animation: badgePulse 2s ease-in-out infinite; }
+
+        @keyframes badgePulseGold { 0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); } 50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); } }
+        .badge-pulse-gold { animation: badgePulseGold 2s ease-in-out infinite; }
+
+        .tool-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0, 180, 216, 0.1);
+            border: 1px solid rgba(0, 180, 216, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .tool-item:hover { background: rgba(0, 180, 216, 0.2); border-color: rgba(0, 180, 216, 0.4); }
+
+        .terminal-card {
+            padding: 12px 16px;
+            background: rgba(255, 107, 53, 0.08);
+            border: 1px solid rgba(255, 107, 53, 0.25);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .terminal-card:hover { background: rgba(255, 107, 53, 0.12); border-color: rgba(255, 107, 53, 0.4); }
+
+        .terminal-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+
+        .terminal-icon {
+            width: 20px; height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .terminal-badge {
+            font-size: 9px;
+            padding: 2px 8px;
+            background: rgba(255, 107, 53, 0.2);
+            border-radius: 10px;
+            color: #ff8c42;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .neural-panel {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(10, 22, 40, 0.9) 0%, rgba(5, 10, 18, 0.95) 100%);
+            border: 1px solid rgba(0, 229, 160, 0.3);
+            box-shadow: 0 0 60px rgba(0, 229, 160, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .neural-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(0, 229, 160, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .neural-panel-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 10;
+            padding: 20px 24px;
+            background: linear-gradient(180deg, rgba(10, 22, 40, 0.95) 0%, transparent 100%);
+        }
+
+        .neural-panel-footer {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            z-index: 10;
+            padding: 20px 24px;
+            background: linear-gradient(0deg, rgba(10, 22, 40, 0.95) 0%, transparent 100%);
+        }
+
+        .core-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, rgba(0, 229, 160, 0.2) 0%, rgba(0, 180, 216, 0.15) 100%);
+            border: 1px solid rgba(0, 229, 160, 0.4);
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--accent);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 229, 160, 0.1);
+            border-radius: 12px;
+            font-size: 10px;
+            color: var(--accent);
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: statusPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes statusPulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 229, 160, 0.4); } 50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(0, 229, 160, 0); } }
+
+        .connection-lines {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .cross-section-lines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .store-tool-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .store-tool-item:hover { background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.4); }
+
+        .module-badge {
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-family: 'Orbitron', monospace;
+        }
+
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-radial"></div>
+
+    <main class="relative z-10">
+        <!-- Header -->
+        <header class="pt-8 pb-4 px-6 lg:px-12">
+            <div class="max-w-7xl mx-auto">
+                <div class="reveal flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00e5a0] to-[#00b4d8] flex items-center justify-center">
+                            <svg class="w-7 h-7 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5"/>
+                                <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="font-tech text-2xl lg:text-3xl font-bold tracking-wider glow-text" style="color: var(--accent);">Zenk</h1>
+                            <p class="text-sm text-[var(--muted)]">Decision Intelligence Agent</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 text-xs font-tech bg-[var(--accent)] text-[var(--bg)] rounded-full">v3.0</span>
+                        <div class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></div>
+                        <span class="text-xs text-[var(--muted)]">系统运行中</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Title -->
+        <section class="py-8 px-6 lg:px-12">
+            <div class="max-w-7xl mx-auto text-center">
+                <h2 class="reveal font-tech text-4xl lg:text-6xl font-black tracking-tight mb-4" style="color: var(--fg);">Zenk决策智能体</h2>
+                <p class="reveal text-lg lg:text-xl text-[var(--muted)] max-w-2xl mx-auto">下一代企业级决策智能平台，融合大语言模型与专有决策引擎</p>
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section class="architecture-section min-h-screen py-8 px-4 lg:px-8 relative">
+            <div class="max-w-7xl mx-auto">
+                <div class="desktop-layout flex gap-6 lg:gap-8 relative" id="main-layout">
+                    
+                    <svg class="connection-lines" id="connectionLines"></svg>
+                    <svg class="cross-section-lines" id="crossSectionLines"></svg>
+
+                    <!-- Left: User Layer -->
+                    <div class="w-full lg:w-1/4 space-y-6 reveal stagger-children flex flex-col">
+                        <div class="glass-card p-5 flex-1 flex flex-col" id="card-user-terminal">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#ff6b35] to-[#ff8c42] flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg" style="color: var(--accent-warm);">用户端</h3>
+                                    <p class="text-xs text-[var(--muted)]">User Terminal</p>
+                                </div>
+                            </div>
+
+                            <div class="terminal-card mb-4" id="card-agent">
+                                <div class="terminal-title">
+                                    <div class="terminal-icon">
+                                        <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <rect x="5" y="2" width="14" height="20" rx="2"/>
+                                            <line x1="12" y1="18" x2="12" y2="18"/>
+                                        </svg>
+                                    </div>
+                                    <span class="font-semibold text-sm" style="color: #ff8c42;">决策智能体</span>
+                                    <span class="terminal-badge">ZenkOntologyAgent</span>
+                                </div>
+                                <ul class="space-y-2 text-xs text-[var(--muted)]">
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-[var(--accent)]" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                                        智能对话交互
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-[var(--accent)]" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                                        多模态任务执行
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-3 h-3 text-[var(--accent)]" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                                        实时决策反馈
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="mb-4 p-4 rounded-xl bg-[rgba(0,229,160,0.05)] border border-[rgba(0,229,160,0.2)]" id="card-data">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-semibold text-sm flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span>
+                                        私域数据接入
+                                    </h4>
+                                    <span class="module-badge bg-[rgba(0,229,160,0.15)] text-[var(--accent)]">ZenkDataLink</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <span class="skill-tag text-[10px]">数据库</span>
+                                    <span class="skill-tag text-[10px]">API接口</span>
+                                    <span class="skill-tag text-[10px]">文件系统</span>
+                                    <span class="skill-tag text-[10px]">实时流</span>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-[rgba(0,180,216,0.1)] border border-[rgba(0,180,216,0.3)]" id="card-devtools">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-semibold text-sm flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-[#00b4d8]"></span>
+                                        Zenk开发者创作工具
+                                    </h4>
+                                    <span class="module-badge bg-[rgba(0,180,216,0.15)] text-[#00b4d8]">ZenkDevTools</span>
+                                </div>
+                                <p class="text-xs text-[var(--muted)] mb-3">自定义开发私域Skill</p>
+                                <div class="space-y-2">
+                                    <div class="tool-item">
+                                        <div class="w-5 h-5 rounded bg-gradient-to-br from-[#00b4d8] to-[#00e5a0] flex items-center justify-center"><span class="text-[8px] font-bold text-[#050a12]">Z</span></div>
+                                        <div><div class="text-[11px] font-medium text-[#00b4d8]">ZenkSDK</div><div class="text-[9px] text-[var(--muted)]">Skill开发套件</div></div>
+                                    </div>
+                                    <div class="tool-item">
+                                        <div class="w-5 h-5 rounded bg-gradient-to-br from-[#00b4d8] to-[#00e5a0] flex items-center justify-center"><span class="text-[8px] font-bold text-[#050a12]">Z</span></div>
+                                        <div><div class="text-[11px] font-medium text-[#00b4d8]">ZenkStudio</div><div class="text-[9px] text-[var(--muted)]">可视化开发环境</div></div>
+                                    </div>
+                                    <div class="tool-item">
+                                        <div class="w-5 h-5 rounded bg-gradient-to-br from-[#00b4d8] to-[#00e5a0] flex items-center justify-center"><span class="text-[8px] font-bold text-[#050a12]">Z</span></div>
+                                        <div><div class="text-[11px] font-medium text-[#00b4d8]">ZenkDebugger</div><div class="text-[9px] text-[var(--muted)]">调试与测试工具</div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-5" id="card-store">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg" style="color: #a855f7;">应用商店中心</h3>
+                                        <p class="text-xs text-[var(--muted)]">ZenkStore</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="store-tool-item">
+                                    <div class="w-5 h-5 rounded bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    </div>
+                                    <div><div class="text-[11px] font-medium text-[#a855f7]">Skill上传</div><div class="text-[9px] text-[var(--muted)]">提交私域技能</div></div>
+                                </div>
+                                <div class="store-tool-item">
+                                    <div class="w-5 h-5 rounded bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    </div>
+                                    <div><div class="text-[11px] font-medium text-[#a855f7]">Skill下载</div><div class="text-[9px] text-[var(--muted)]">获取公域技能</div></div>
+                                </div>
+                                <div class="store-tool-item">
+                                    <div class="w-5 h-5 rounded bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    </div>
+                                    <div><div class="text-[11px] font-medium text-[#a855f7]">安全审核</div><div class="text-[9px] text-[var(--muted)]">质量保障机制</div></div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-[rgba(168,85,247,0.2)]">
+                                <p class="text-center text-xs text-[var(--muted)]">生态闭环：上传 - 审核 - 发布 - 下载</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Center: Zenk Platform -->
+                    <div class="w-full lg:w-2/4 reveal flex flex-col" id="card-platform">
+                        <div class="glass-card p-6 flex-1 flex flex-col">
+                            <div class="flex items-center justify-center gap-4 mb-6">
+                                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00e5a0] via-[#00b4d8] to-[#00e5a0] bg-[length:200%_200%] flex items-center justify-center" style="animation: gradientShift 4s ease infinite;">
+                                    <svg class="w-9 h-9 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-tech text-2xl font-bold" style="color: var(--accent);">Zenk决策智能体平台</h3>
+                                    <p class="text-sm text-[var(--muted)]">Decision Intelligence Platform</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                                <div class="p-4 rounded-xl bg-[rgba(0,229,160,0.08)] border border-[rgba(0,229,160,0.25)]">
+                                    <h4 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color: var(--accent);">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M1 12h6m6 0h10"/></svg>
+                                        智能体通用能力
+                                    </h4>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <span class="skill-tag">NLP理解</span><span class="skill-tag">意图识别</span><span class="skill-tag">多轮对话</span>
+                                        <span class="skill-tag">上下文记忆</span><span class="skill-tag">任务规划</span><span class="skill-tag">工具调用</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 rounded-xl bg-[rgba(0,180,216,0.08)] border border-[rgba(0,180,216,0.25)]">
+                                    <h4 class="font-semibold text-sm mb-3 flex items-center gap-2" style="color: #00b4d8;">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                                        Claw 能力
+                                    </h4>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <span class="skill-tag" style="border-color: rgba(0,180,216,0.4); background: rgba(0,180,216,0.15); color: #00b4d8;">网页抓取</span>
+                                        <span class="skill-tag" style="border-color: rgba(0,180,216,0.4); background: rgba(0,180,216,0.15); color: #00b4d8;">API调用</span>
+                                        <span class="skill-tag" style="border-color: rgba(0,180,216,0.4); background: rgba(0,180,216,0.15); color: #00b4d8;">文件操作</span>
+                                        <span class="skill-tag" style="border-color: rgba(0,180,216,0.4); background: rgba(0,180,216,0.15); color: #00b4d8;">代码执行</span>
+                                        <span class="skill-tag" style="border-color: rgba(0,180,216,0.4); background: rgba(0,180,216,0.15); color: #00b4d8;">数据提取</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-[rgba(0,180,216,0.08)] border border-[rgba(0,180,216,0.3)] mb-5" id="card-publicskills">
+                                <h4 class="font-semibold text-sm mb-4 flex items-center gap-2">
+                                    <div class="w-5 h-5 rounded bg-gradient-to-br from-[#00b4d8] to-[#00e5a0] flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    </div>
+                                    <span style="color: #00b4d8;">Top 20 Skills</span>
+                                    <span class="ml-auto px-2 py-0.5 text-[10px] rounded-full bg-[rgba(0,180,216,0.2)] text-[#00b4d8] badge-pulse-cyan">公域技能</span>
+                                </h4>
+                                <p class="text-xs text-[var(--muted)] mb-3">通用技能池，适用于多行业多场景</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="skillsGrid"></div>
+                                <div class="mt-3 pt-3 border-t border-[rgba(0,180,216,0.2)] flex items-center justify-between">
+                                    <span class="text-[10px] text-[var(--muted)]">来自Zenk官方技能市场</span>
+                                    <button class="px-3 py-1 text-[10px] rounded bg-[rgba(0,180,216,0.15)] text-[#00b4d8] border border-[rgba(0,180,216,0.3)] hover:bg-[rgba(0,180,216,0.25)] transition-all cursor-pointer" onclick="refreshPublicSkills()">刷新列表</button>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded-xl bg-[rgba(245,158,11,0.08)] border border-[rgba(245,158,11,0.3)] mt-auto" id="card-zenkskills">
+                                <h4 class="font-semibold text-sm mb-4 flex items-center gap-2">
+                                    <div class="w-5 h-5 rounded bg-gradient-to-br from-[#f59e0b] to-[#fbbf24] flex items-center justify-center">
+                                        <svg class="w-3 h-3 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                                    </div>
+                                    <span style="color: #fbbf24;">Top 20 ZenkSkills</span>
+                                    <span class="ml-auto px-2 py-0.5 text-[10px] rounded-full bg-[rgba(245,158,11,0.2)] text-[#fbbf24] badge-pulse-gold">私域技能</span>
+                                </h4>
+                                <p class="text-xs text-[var(--muted)] mb-3">企业专属技能工具，深度定制的决策能力</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="zenkSkillsGrid"></div>
+                                <div class="mt-3 pt-3 border-t border-[rgba(245,158,11,0.2)] flex items-center justify-between">
+                                    <span class="text-[10px] text-[var(--muted)]">动态加载企业私域技能</span>
+                                    <button class="px-3 py-1 text-[10px] rounded bg-[rgba(245,158,11,0.15)] text-[#fbbf24] border border-[rgba(245,158,11,0.3)] hover:bg-[rgba(245,158,11,0.25)] transition-all cursor-pointer" onclick="refreshZenkSkills()">刷新列表</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: LLM Layer -->
+                    <div class="w-full lg:w-1/4 space-y-6 reveal stagger-children flex flex-col">
+                        <div class="glass-card p-5 flex-1 flex flex-col" id="card-llm">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                        <polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                                        <polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg" style="color: #3b82f6;">大语言模型</h3>
+                                    <p class="text-xs text-[var(--muted)]">Large Language Models</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-[rgba(59,130,246,0.1)] border border-[rgba(59,130,246,0.2)]">
+                                    <span class="text-sm font-medium">GPT-4o</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-[#3b82f6] text-white">推荐</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-[rgba(139,92,246,0.1)] border border-[rgba(139,92,246,0.2)]">
+                                    <span class="text-sm font-medium">Claude 3.5</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-[#8b5cf6] text-white">高性能</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.2)]">
+                                    <span class="text-sm font-medium">Qwen-Max</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-[#10b981] text-white">国产</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-[rgba(236,72,153,0.1)] border border-[rgba(236,72,153,0.2)]">
+                                    <span class="text-sm font-medium">DeepSeek</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-[#ec4899] text-white">开源</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 rounded-lg bg-[rgba(251,146,60,0.1)] border border-[rgba(251,146,60,0.2)]">
+                                    <span class="text-sm font-medium">Llama 3.1</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded bg-[#fb923c] text-white">可部署</span>
+                                </div>
+                            </div>
+                            <div class="p-4 rounded-xl bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.2)] mt-auto">
+                                <h4 class="font-semibold text-sm mb-3" style="color: #3b82f6;">通用能力说明</h4>
+                                <ul class="space-y-2 text-xs text-[var(--muted)]">
+                                    <li class="flex items-start gap-2"><svg class="w-3 h-3 mt-0.5 text-[#3b82f6] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span><strong class="text-[var(--fg)]">语言理解</strong> - 文本分析、语义抽取</span></li>
+                                    <li class="flex items-start gap-2"><svg class="w-3 h-3 mt-0.5 text-[#3b82f6] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span><strong class="text-[var(--fg)]">内容生成</strong> - 报告撰写、代码生成</span></li>
+                                    <li class="flex items-start gap-2"><svg class="w-3 h-3 mt-0.5 text-[#3b82f6] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span><strong class="text-[var(--fg)]">知识推理</strong> - 逻辑推断、因果分析</span></li>
+                                    <li class="flex items-start gap-2"><svg class="w-3 h-3 mt-0.5 text-[#3b82f6] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg><span><strong class="text-[var(--fg)]">多模态</strong> - 图像理解、语音处理</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-5" id="card-decision">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00e5a0] to-[#00b4d8] flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg" style="color: var(--accent);">Zenk决策模型</h3>
+                                    <p class="text-xs text-[var(--muted)]">Decision Engine</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="p-3 rounded-lg bg-[rgba(0,229,160,0.1)] border border-[rgba(0,229,160,0.3)]">
+                                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse"></span><span class="text-sm font-medium">私域决策</span></div>
+                                    <p class="text-xs text-[var(--muted)]">企业专属决策逻辑，支持复杂业务规则</p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-[rgba(0,180,216,0.1)] border border-[rgba(0,180,216,0.3)]">
+                                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-[#00b4d8] animate-pulse" style="animation-delay: 0.3s;"></span><span class="text-sm font-medium">预测类任务</span></div>
+                                    <p class="text-xs text-[var(--muted)]">时序预测、风险预警、趋势分析</p>
+                                </div>
+                                <div class="p-3 rounded-lg bg-[rgba(255,107,53,0.1)] border border-[rgba(255,107,53,0.3)]">
+                                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-[#ff6b35] animate-pulse" style="animation-delay: 0.6s;"></span><span class="text-sm font-medium">本体中心联动</span></div>
+                                    <p class="text-xs text-[var(--muted)]">与本机结构实时同步，动态推理</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Neural Section -->
+        <section class="py-8 px-4 lg:px-8 relative" id="neural-section">
+            <div class="max-w-7xl mx-auto reveal">
+                <div class="neural-panel h-[400px] lg:h-[480px]" id="card-neural">
+                    <div class="neural-panel-header">
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00e5a0] to-[#00b4d8] flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M1 12h6m6 0h10"/></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-tech text-xl lg:text-2xl font-bold" style="color: var(--accent);">Zenk本体中心</h3>
+                                    <p class="text-xs text-[var(--muted)]">Ontology Center</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="core-badge">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                                    本体结构核心
+                                </span>
+                                <div class="status-indicator"><span class="status-dot"></span>实时同步</div>
+                            </div>
+                        </div>
+                    </div>
+                    <canvas id="neuralCanvas" class="w-full h-full"></canvas>
+                    <div class="neural-panel-footer">
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div class="flex items-center gap-6">
+                                <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-[#00e5a0]"></div><span class="text-[11px] text-[var(--muted)]">决策引擎</span></div>
+                                <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-[#00b4d8]"></div><span class="text-[11px] text-[var(--muted)]">推理模块</span></div>
+                                <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]"></div><span class="text-[11px] text-[var(--muted)]">本体结构</span></div>
+                                <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-[#ff6b35]"></div><span class="text-[11px] text-[var(--muted)]">预测系统</span></div>
+                            </div>
+                            <p class="text-xs text-[var(--muted)]">神经网络式知识关联与决策推理</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="py-12 px-6 lg:px-12">
+            <div class="max-w-5xl mx-auto">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children reveal">
+                    <div class="glass-card p-5 text-center"><div class="font-tech text-3xl lg:text-4xl font-bold mb-2" style="color: var(--accent);">500+</div><div class="text-sm text-[var(--muted)]">企业客户</div></div>
+                    <div class="glass-card p-5 text-center"><div class="font-tech text-3xl lg:text-4xl font-bold mb-2" style="color: #00b4d8;">10M+</div><div class="text-sm text-[var(--muted)]">决策执行</div></div>
+                    <div class="glass-card p-5 text-center"><div class="font-tech text-3xl lg:text-4xl font-bold mb-2" style="color: #f59e0b;">2000+</div><div class="text-sm text-[var(--muted)]">Skill应用</div></div>
+                    <div class="glass-card p-5 text-center"><div class="font-tech text-3xl lg:text-4xl font-bold mb-2" style="color: #a855f7;">99.9%</div><div class="text-sm text-[var(--muted)]">可用性</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-8 px-6 border-t border-[var(--border)]">
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00e5a0] to-[#00b4d8] flex items-center justify-center">
+                        <svg class="w-4 h-4 text-[#050a12]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <span class="font-tech text-sm" style="color: var(--accent);">Zenk</span>
+                </div>
+                <p class="text-xs text-[var(--muted)]">Decision Intelligence Platform - Redefining Enterprise AI</p>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        // Skills Data
+        const allPublicSkills = ['数据分析', '报表生成', '邮件处理', '日程管理', '文档摘要', '翻译服务', '代码审查', 'API集成', '工作流自动化', '客户服务', '风险预警', '舆情监控', '智能推荐', '知识问答', '合同分析', '财务预测', '供应链优化', '人力资源', '营销助手', '项目管理', '数据可视化', '文本生成', '语音转写', '图像识别'];
+        const allZenkSkills = ['需求预测', '订单追踪', '供应商管', '缺料预警', '物流跟踪', '对账结算', '交期预判', '风险预警', '供需平衡', '补货决策', '采购优化', '账期预判', '入库登记', '出库校验', '库位管理', '库存盘点', '批次追溯', '呆滞预警', '库容预测', '周转分析', '库存优化', '安全测算', '调拨决策', '库龄分析', '计划排产', '报工统计', '工序流转', '在制追踪', '异常上报', '齐套检查', '产能测算', '瓶颈诊断', '产量预判', '能耗预测', '排产优化', '良率预测', '损耗预判', '交期推演', '负荷测算', '投料优化'];
+
+        function getRandomSkills(arr, count) { return [...arr].sort(() => 0.5 - Math.random()).slice(0, count); }
+        function initSkillsGrid(id, skills, tagClass) {
+            const grid = document.getElementById(id);
+            if (!grid) return;
+            grid.innerHTML = '';
+            getRandomSkills(skills, 20).forEach(skill => {
+                const tag = document.createElement('div');
+                tag.className = tagClass + ' justify-center';
+                tag.textContent = skill;
+                grid.appendChild(tag);
+            });
+        }
+        function refreshPublicSkills() { initSkillsGrid('skillsGrid', allPublicSkills, 'public-skill-tag'); }
+        function refreshZenkSkills() { initSkillsGrid('zenkSkillsGrid', allZenkSkills, 'zenk-skill-tag'); }
+
+        // Tech Connection Lines System
+        const connectionLinesSvg = document.getElementById('connectionLines');
+        const crossSectionLinesSvg = document.getElementById('crossSectionLines');
+        
+        let lines = [];
+        let crossLines = [];
+        let lineAnimId = null;
+        let crossLineAnimId = null;
+
+        function getCardCenter(card, side = 'center') {
+            if (!card) return null;
+            const rect = card.getBoundingClientRect();
+            const positions = {
+                left: { x: rect.left, y: rect.top + rect.height / 2 },
+                right: { x: rect.right, y: rect.top + rect.height / 2 },
+                top: { x: rect.left + rect.width / 2, y: rect.top },
+                bottom: { x: rect.left + rect.width / 2, y: rect.bottom }
+            };
+            return positions[side] || { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        }
+
+        function drawTechLines() {
+            if (!connectionLinesSvg) return;
+            
+            const mainLayout = document.getElementById('main-layout');
+            if (!mainLayout) return;
+            
+            const layoutRect = mainLayout.getBoundingClientRect();
+            connectionLinesSvg.setAttribute('width', layoutRect.width);
+            connectionLinesSvg.setAttribute('height', layoutRect.height);
+            connectionLinesSvg.innerHTML = '';
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            
+            // Line colors
+            const lineColors = {
+                'orange': { main: '#ff6b35', glow: '#ff8c42' },
+                'cyan': { main: '#00b4d8', glow: '#00e5a0' },
+                'purple': { main: '#a855f7', glow: '#6366f1' },
+                'gold': { main: '#f59e0b', glow: '#fbbf24' },
+                'green': { main: '#00e5a0', glow: '#00b4d8' },
+                'blue': { main: '#3b82f6', glow: '#8b5cf6' }
+            };
+
+            // Create tech glow filter
+            Object.keys(lineColors).forEach(key => {
+                const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+                filter.setAttribute('id', `glow-${key}`);
+                filter.innerHTML = `
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feFlood flood-color="${lineColors[key].glow}" flood-opacity="0.6"/>
+                    <feComposite in2="blur" operator="in"/>
+                    <feMerge>
+                        <feMergeNode/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                `;
+                defs.appendChild(filter);
+            });
+
+            connectionLinesSvg.appendChild(defs);
+
+            const cards = {
+                userTerminal: document.getElementById('card-user-terminal'),
+                agent: document.getElementById('card-agent'),
+                data: document.getElementById('card-data'),
+                devtools: document.getElementById('card-devtools'),
+                store: document.getElementById('card-store'),
+                publicSkills: document.getElementById('card-publicskills'),
+                zenkSkills: document.getElementById('card-zenkskills'),
+                llm: document.getElementById('card-llm'),
+                decision: document.getElementById('card-decision')
+            };
+
+            function toLocal(point) {
+                return { x: point.x - layoutRect.left, y: point.y - layoutRect.top };
+            }
+
+            // Define all connections
+            const connections = [
+                { from: cards.userTerminal, fromSide: 'right', to: cards.publicSkills, toSide: 'left', color: 'orange' },
+                { from: cards.agent, fromSide: 'bottom', to: cards.data, toSide: 'top', color: 'green', internal: true },
+                { from: cards.devtools, fromSide: 'bottom', to: cards.store, toSide: 'top', color: 'cyan', internal: true },
+                { from: cards.zenkSkills, fromSide: 'left', to: cards.store, toSide: 'right', color: 'purple' },
+                { from: cards.llm, fromSide: 'left', to: cards.publicSkills, toSide: 'right', color: 'blue' },
+                { from: cards.llm, fromSide: 'left', to: cards.zenkSkills, toSide: 'right', color: 'blue' },
+                { from: cards.decision, fromSide: 'left', to: cards.zenkSkills, toSide: 'right', color: 'gold' }
+            ];
+
+            lines = [];
+
+            connections.forEach((conn, idx) => {
+                if (!conn.from || !conn.to) return;
+                
+                const fromPoint = getCardCenter(conn.from, conn.fromSide);
+                const toPoint = getCardCenter(conn.to, conn.toSide);
+                if (!fromPoint || !toPoint) return;
+
+                const localFrom = toLocal(fromPoint);
+                const localTo = toLocal(toPoint);
+                const dx = localTo.x - localFrom.x;
+                const dy = localTo.y - localFrom.y;
+
+                // Create path group
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('filter', `url(#glow-${conn.color})`);
+
+                // Base line (dark)
+                const baseLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                let d;
+                if (conn.internal) {
+                    d = `M ${localFrom.x} ${localFrom.y} L ${localTo.x} ${localTo.y}`;
+                } else {
+                    const ctrl = Math.min(Math.abs(dx), Math.abs(dy)) * 0.5;
+                    const cp1x = localFrom.x + (conn.fromSide === 'right' ? ctrl : conn.fromSide === 'left' ? -ctrl : 0);
+                    const cp1y = localFrom.y + (conn.fromSide === 'bottom' ? ctrl : conn.fromSide === 'top' ? -ctrl : 0);
+                    const cp2x = localTo.x + (conn.toSide === 'right' ? ctrl : conn.toSide === 'left' ? -ctrl : 0);
+                    const cp2y = localTo.y + (conn.toSide === 'bottom' ? ctrl : conn.toSide === 'top' ? -ctrl : 0);
+                    d = `M ${localFrom.x} ${localFrom.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${localTo.x} ${localTo.y}`;
+                }
+                baseLine.setAttribute('d', d);
+                baseLine.setAttribute('stroke', lineColors[conn.color].main);
+                baseLine.setAttribute('stroke-width', '2');
+                baseLine.setAttribute('stroke-opacity', '0.3');
+                baseLine.setAttribute('fill', 'none');
+                g.appendChild(baseLine);
+
+                // Animated dash line
+                const dashLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                dashLine.setAttribute('d', d);
+                dashLine.setAttribute('stroke', lineColors[conn.color].main);
+                dashLine.setAttribute('stroke-width', '2');
+                dashLine.setAttribute('fill', 'none');
+                dashLine.setAttribute('stroke-dasharray', '8 16');
+                dashLine.id = `dash-${idx}`;
+                g.appendChild(dashLine);
+
+                // Data flow particles
+                for (let i = 0; i < 3; i++) {
+                    const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    particle.setAttribute('r', '3');
+                    particle.setAttribute('fill', lineColors[conn.color].glow);
+                    particle.id = `particle-${idx}-${i}`;
+                    g.appendChild(particle);
+                    
+                    lines.push({
+                        path: baseLine,
+                        particle: particle,
+                        progress: i / 3,
+                        speed: 0.004 + Math.random() * 0.002,
+                        color: lineColors[conn.color].glow
+                    });
+                }
+
+                connectionLinesSvg.appendChild(g);
+            });
+        }
+
+        function drawCrossSectionTechLines() {
+            if (!crossSectionLinesSvg) return;
+            crossSectionLinesSvg.innerHTML = '';
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+            filter.setAttribute('id', 'glow-cross');
+            filter.innerHTML = `
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feFlood flood-color="#00e5a0" flood-opacity="0.7"/>
+                <feComposite in2="blur" operator="in"/>
+                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+            `;
+            defs.appendChild(filter);
+            crossSectionLinesSvg.appendChild(defs);
+
+            const neural = document.getElementById('card-neural');
+            const zenkSkills = document.getElementById('card-zenkskills');
+            if (!neural || !zenkSkills) return;
+
+            const fromPoint = getCardCenter(neural, 'top');
+            const toPoint = getCardCenter(zenkSkills, 'bottom');
+            if (!fromPoint || !toPoint) return;
+
+            const midY = (fromPoint.y + toPoint.y) / 2;
+            const d = `M ${fromPoint.x} ${fromPoint.y} C ${fromPoint.x} ${midY}, ${toPoint.x} ${midY}, ${toPoint.x} ${toPoint.y}`;
+
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('filter', 'url(#glow-cross)');
+
+            // Base line
+            const baseLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            baseLine.setAttribute('d', d);
+            baseLine.setAttribute('stroke', '#00e5a0');
+            baseLine.setAttribute('stroke-width', '2');
+            baseLine.setAttribute('stroke-opacity', '0.3');
+            baseLine.setAttribute('fill', 'none');
+            g.appendChild(baseLine);
+
+            // Dash line
+            const dashLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            dashLine.setAttribute('d', d);
+            dashLine.setAttribute('stroke', '#00e5a0');
+            dashLine.setAttribute('stroke-width', '2');
+            dashLine.setAttribute('fill', 'none');
+            dashLine.setAttribute('stroke-dasharray', '8 16');
+            dashLine.id = 'cross-dash';
+            g.appendChild(dashLine);
+
+            crossSectionLinesSvg.appendChild(g);
+
+            crossLines = [];
+            for (let i = 0; i < 4; i++) {
+                const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                particle.setAttribute('r', '3');
+                particle.setAttribute('fill', '#00e5a0');
+                particle.id = `cross-particle-${i}`;
+                crossSectionLinesSvg.appendChild(particle);
+                
+                crossLines.push({
+                    path: baseLine,
+                    particle: particle,
+                    progress: i / 4,
+                    speed: 0.003 + Math.random() * 0.002
+                });
+            }
+        }
+
+        function animateTechLines() {
+            const time = Date.now();
+            
+            // Animate dash offset
+            const dashOffset = (time * 0.05) % 48;
+            document.querySelectorAll('[id^="dash-"]').forEach(el => {
+                el.setAttribute('stroke-dashoffset', dashOffset);
+            });
+            const crossDash = document.getElementById('cross-dash');
+            if (crossDash) crossDash.setAttribute('stroke-dashoffset', dashOffset);
+
+            // Animate particles
+            lines.forEach(line => {
+                if (!line.path || !line.particle) return;
+                
+                line.progress += line.speed;
+                if (line.progress > 1) line.progress = 0;
+
+                const pathLength = line.path.getTotalLength();
+                const point = line.path.getPointAtLength(line.progress * pathLength);
+                
+                line.particle.setAttribute('cx', point.x);
+                line.particle.setAttribute('cy', point.y);
+                line.particle.style.filter = `drop-shadow(0 0 6px ${line.color}) drop-shadow(0 0 12px ${line.color})`;
+            });
+
+            crossLines.forEach(line => {
+                if (!line.path || !line.particle) return;
+                
+                line.progress += line.speed;
+                if (line.progress > 1) line.progress = 0;
+
+                const pathLength = line.path.getTotalLength();
+                const point = line.path.getPointAtLength(line.progress * pathLength);
+                
+                line.particle.setAttribute('cx', point.x);
+                line.particle.setAttribute('cy', point.y);
+                line.particle.style.filter = 'drop-shadow(0 0 8px #00e5a0) drop-shadow(0 0 16px #00e5a0)';
+            });
+
+            lineAnimId = requestAnimationFrame(animateTechLines);
+        }
+
+        // Neural Network
+        const neuralCanvas = document.getElementById('neuralCanvas');
+        const ctx = neuralCanvas ? neuralCanvas.getContext('2d') : null;
+        let nodes = [], connections = [], particles = [], neuralAnimId = null;
+
+        function initNeuralNetwork() {
+            if (!neuralCanvas || !ctx) return;
+            
+            const rect = neuralCanvas.getBoundingClientRect();
+            neuralCanvas.width = rect.width * window.devicePixelRatio;
+            neuralCanvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            const width = rect.width, height = rect.height;
+            
+            nodes = [{ x: width / 2, y: height / 2, radius: 28, baseRadius: 28, color: '#00e5a0', label: 'Zenk Core', type: 'core', pulsePhase: 0 }];
+            
+            const primaryPositions = [
+                { angle: -Math.PI / 2, dist: 90, label: '决策引擎', color: '#00b4d8' },
+                { angle: -Math.PI / 6, dist: 100, label: '推理模块', color: '#3b82f6' },
+                { angle: Math.PI / 6, dist: 100, label: '本体结构', color: '#8b5cf6' },
+                { angle: Math.PI / 2, dist: 90, label: '预测系统', color: '#ff6b35' },
+                { angle: Math.PI - Math.PI / 6, dist: 100, label: '数据层', color: '#10b981' },
+                { angle: Math.PI + Math.PI / 6, dist: 100, label: 'API网关', color: '#ec4899' }
+            ];
+            
+            primaryPositions.forEach((pos, i) => {
+                nodes.push({
+                    x: width / 2 + Math.cos(pos.angle) * pos.dist,
+                    y: height / 2 + Math.sin(pos.angle) * pos.dist,
+                    radius: 14, baseRadius: 14, color: pos.color, label: pos.label, type: 'primary', pulsePhase: i * 0.5
+                });
+            });
+            
+            const colors = ['#00e5a0', '#00b4d8', '#3b82f6', '#8b5cf6', '#ff6b35', '#10b981'];
+            for (let i = 0; i < 18; i++) {
+                const angle = (i / 18) * Math.PI * 2, dist = 150 + Math.random() * 50;
+                nodes.push({
+                    x: width / 2 + Math.cos(angle) * dist,
+                    y: height / 2 + Math.sin(angle) * dist,
+                    radius: 5 + Math.random() * 3, baseRadius: 5 + Math.random() * 3,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    type: 'secondary', pulsePhase: Math.random() * Math.PI * 2,
+                    angle, dist, speed: 0.0003 + Math.random() * 0.0006
+                });
+            }
+            
+            connections = [];
+            for (let i = 1; i <= 6; i++) connections.push({ from: 0, to: i, strength: 1 });
+            for (let i = 7; i < nodes.length; i++) {
+                let minDist = Infinity, nearest = 0;
+                nodes.slice(1, 7).forEach((c, j) => {
+                    const d = Math.hypot(nodes[i].x - c.x, nodes[i].y - c.y);
+                    if (d < minDist) { minDist = d; nearest = j + 1; }
+                });
+                if (nearest) connections.push({ from: nearest, to: i, strength: 0.5 });
+            }
+            for (let i = 0; i < 10; i++) {
+                const a = 7 + Math.floor(Math.random() * (nodes.length - 7));
+                const b = 7 + Math.floor(Math.random() * (nodes.length - 7));
+                if (a !== b) connections.push({ from: a, to: b, strength: 0.2 });
+            }
+            
+            particles = [];
+            for (let i = 0; i < 20; i++) {
+                particles.push({
+                    connIdx: Math.floor(Math.random() * connections.length),
+                    progress: Math.random(), speed: 0.002 + Math.random() * 0.003, size: 2 + Math.random() * 2
+                });
+            }
+        }
+
+        function animateNeural() {
+            if (!ctx || !neuralCanvas) return;
+            
+            const width = neuralCanvas.width / window.devicePixelRatio;
+            const height = neuralCanvas.height / window.devicePixelRatio;
+            ctx.clearRect(0, 0, width, height);
+            
+            const time = Date.now() * 0.001;
+            
+            connections.forEach(conn => {
+                const from = nodes[conn.from], to = nodes[conn.to];
+                if (!from || !to) return;
+                
+                const gradient = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+                const alpha = Math.round(conn.strength * 40).toString(16).padStart(2, '0');
+                gradient.addColorStop(0, from.color + alpha);
+                gradient.addColorStop(1, to.color + alpha);
+                
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = conn.strength * 2;
+                ctx.stroke();
+            });
+            
+            particles.forEach(p => {
+                const conn = connections[p.connIdx];
+                if (!conn) return;
+                const from = nodes[conn.from], to = nodes[conn.to];
+                if (!from || !to) return;
+                
+                p.progress += p.speed;
+                if (p.progress > 1) { p.progress = 0; p.connIdx = Math.floor(Math.random() * connections.length); }
+                
+                const x = from.x + (to.x - from.x) * p.progress;
+                const y = from.y + (to.y - from.y) * p.progress;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(0.5, p.size), 0, Math.PI * 2);
+                ctx.fillStyle = '#00e5a0';
+                ctx.shadowColor = '#00e5a0';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+            
+            nodes.forEach(node => {
+                node.radius = node.baseRadius * (Math.sin(time * 2 + node.pulsePhase) * 0.15 + 1);
+                
+                if (node.type === 'secondary' && node.angle !== undefined) {
+                    node.angle += node.speed;
+                    node.x = width / 2 + Math.cos(node.angle) * node.dist;
+                    node.y = height / 2 + Math.sin(node.angle) * node.dist;
+                }
+                
+                const glowRadius = Math.max(1, node.radius * 3);
+                const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
+                gradient.addColorStop(0, node.color + '40');
+                gradient.addColorStop(1, node.color + '00');
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, Math.max(1, node.radius), 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+                
+                if (node.label) {
+                    ctx.font = node.type === 'core' ? 'bold 11px "Noto Sans SC"' : '9px "Noto Sans SC"';
+                    ctx.fillStyle = '#e8f0ff';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(node.label, node.x, node.y + node.radius + 14);
+                }
+            });
+            
+            neuralAnimId = requestAnimationFrame(animateNeural);
+        }
+
+        // Scroll Reveal
+        function initScrollReveal() {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal, .stagger-children').forEach(el => observer.observe(el));
+        }
+
+        // Initialize
+        function init() {
+            initSkillsGrid('skillsGrid', allPublicSkills, 'public-skill-tag');
+            initSkillsGrid('zenkSkillsGrid', allZenkSkills, 'zenk-skill-tag');
+            initNeuralNetwork();
+            initScrollReveal();
+            animateNeural();
+            
+            setTimeout(() => {
+                drawTechLines();
+                drawCrossSectionTechLines();
+                animateTechLines();
+            }, 500);
+        }
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (neuralAnimId) cancelAnimationFrame(neuralAnimId);
+                if (lineAnimId) cancelAnimationFrame(lineAnimId);
+                initNeuralNetwork();
+                animateNeural();
+                drawTechLines();
+                drawCrossSectionTechLines();
+            }, 250);
+        });
+
+        window.addEventListener('scroll', drawCrossSectionTechLines);
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            if (neuralAnimId) cancelAnimationFrame(neuralAnimId);
+            if (lineAnimId) cancelAnimationFrame(lineAnimId);
+        }
+    </script>
+</body>
+</html>

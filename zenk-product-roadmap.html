@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zenk 产品概念到研发里程碑</title>
+  <style>
+    :root {
+      --bg: #060a14;
+      --ink: #e2e8f0;
+      --muted: #7a8ba8;
+      --paper: rgba(12, 20, 40, 0.78);
+      --card: rgba(16, 26, 52, 0.72);
+      --line: rgba(0, 212, 255, 0.08);
+      --gold: #00d4ff;
+      --teal: #00e89d;
+      --blue: #4f8fff;
+      --rust: #ff6b35;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.45), 0 0 80px rgba(0, 212, 255, 0.03);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 15% 10%, rgba(0, 212, 255, 0.06), transparent 40%),
+        radial-gradient(ellipse at 85% 15%, rgba(79, 143, 255, 0.05), transparent 35%),
+        radial-gradient(ellipse at 50% 80%, rgba(0, 232, 157, 0.03), transparent 40%),
+        linear-gradient(180deg, #060a14 0%, #0a1020 50%, #060a14 100%);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.72));
+    }
+
+    .shell {
+      position: relative;
+      width: min(1320px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 72px;
+    }
+
+    .nav {
+      position: sticky;
+      top: 18px;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 212, 255, 0.12);
+      background: rgba(8, 14, 30, 0.82);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px rgba(0, 212, 255, 0.04);
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.9), rgba(79, 143, 255, 0.9));
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.25), 0 10px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand-mark::before, .brand-mark::after {
+      content: ""; position: absolute; inset: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 10px;
+    }
+    .brand-mark::after { inset: 14px; border-radius: 7px; }
+
+    .brand-copy strong, .brand-copy span { display: block; }
+    .brand-copy strong { letter-spacing: 0.12em; text-transform: uppercase; font-size: 14px; color: var(--ink); }
+    .brand-copy span { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .nav-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .nav-links a {
+      text-decoration: none; padding: 10px 14px; border-radius: 999px;
+      background: rgba(0, 212, 255, 0.06); border: 1px solid rgba(0, 212, 255, 0.1);
+      color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    .nav-links a:hover {
+      background: rgba(0, 212, 255, 0.12); color: var(--gold); border-color: rgba(0, 212, 255, 0.25);
+    }
+
+    .hero, .concept-grid, .domain-grid, .module-grid, .mindmap-grid, .map-row,
+    .milestone-grid, .delivery-grid, .risk-grid, .image-grid { display: grid; gap: 18px; }
+
+    .hero { margin-top: 24px; grid-template-columns: 1.15fr 0.85fr; }
+    .concept-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .domain-grid, .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .milestone-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .mindmap-grid { grid-template-columns: 1.1fr 0.9fr; gap: 22px; }
+    .map-row { grid-template-columns: 1fr; gap: 14px; }
+    .delivery-grid, .risk-grid, .image-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .panel, .card {
+      border-radius: var(--radius-xl); border: 1px solid rgba(0, 212, 255, 0.1);
+      background: var(--paper); backdrop-filter: blur(14px); box-shadow: var(--shadow); overflow: hidden;
+    }
+
+    .hero-main {
+      padding: 34px; min-height: 520px;
+      background:
+        radial-gradient(circle at 90% 12%, rgba(0, 212, 255, 0.08), transparent 30%),
+        radial-gradient(circle at 10% 80%, rgba(79, 143, 255, 0.05), transparent 30%),
+        linear-gradient(135deg, rgba(12, 20, 40, 0.9), rgba(8, 16, 36, 0.8));
+    }
+
+    .hero-side {
+      padding: 28px;
+      background: linear-gradient(180deg, rgba(0, 212, 255, 0.08), rgba(79, 143, 255, 0.06));
+      border-color: rgba(0, 212, 255, 0.15); color: var(--ink);
+    }
+
+    .section { margin-top: 22px; padding: 30px; }
+
+    .eyebrow, .label {
+      display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px;
+      border-radius: 999px; background: rgba(0, 212, 255, 0.08); color: var(--gold);
+      font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+    }
+
+    .kicker { color: var(--gold); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
+
+    h1, h2, h3, p, ul { margin: 0; }
+
+    h1 {
+      margin-top: 18px; font-size: clamp(42px, 6vw, 80px); line-height: 0.96;
+      letter-spacing: -0.05em; max-width: 11ch;
+      background: linear-gradient(135deg, #e2e8f0 0%, #00d4ff 60%, #00e89d 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-lead { margin-top: 16px; max-width: 62ch; font-size: 16px; line-height: 1.9; color: var(--muted); }
+
+    .hero-stats { margin-top: 28px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+    .stat {
+      padding: 16px; border-radius: 18px; border: 1px solid rgba(0, 212, 255, 0.08);
+      background: rgba(0, 212, 255, 0.04);
+    }
+
+    .stat strong { display: block; font-size: 26px; color: var(--gold); margin-bottom: 8px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+    .stat span { display: block; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+    .stack { display: grid; gap: 14px; margin-top: 16px; }
+
+    .stack-item, .card {
+      padding: 22px; border-radius: var(--radius-lg); background: var(--card);
+      border: 1px solid rgba(0, 212, 255, 0.08);
+    }
+
+    .stack-item p, .hero-side p { color: rgba(226, 232, 240, 0.78); line-height: 1.8; font-size: 14px; }
+
+    .hero-side .stack-item { background: rgba(0, 212, 255, 0.04); border-color: rgba(0, 212, 255, 0.1); }
+
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 24px; }
+    .section-head h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.06; letter-spacing: -0.04em; margin-top: 12px; color: var(--ink); }
+    .section-head p { max-width: 58ch; color: var(--muted); line-height: 1.8; font-size: 15px; }
+
+    .card h3 { font-size: 20px; margin-top: 12px; margin-bottom: 10px; color: var(--ink); }
+    .card p { color: var(--muted); line-height: 1.8; font-size: 14px; }
+
+    .list { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
+
+    .list li {
+      padding: 12px 14px; border-radius: 14px; background: rgba(0, 212, 255, 0.03);
+      border: 1px solid rgba(0, 212, 255, 0.06); color: var(--ink); line-height: 1.7; font-size: 14px;
+    }
+
+    .flow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 20px; }
+
+    .flow-step {
+      min-height: 54px; padding: 0 18px; border-radius: 16px; display: inline-flex;
+      align-items: center; justify-content: center; background: rgba(0, 212, 255, 0.06);
+      border: 1px solid rgba(0, 212, 255, 0.12); font-weight: 600; color: var(--ink);
+    }
+
+    .flow-arrow { color: var(--gold); font-weight: 700; text-shadow: 0 0 10px rgba(0, 212, 255, 0.4); }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    .tag {
+      padding: 8px 12px; border-radius: 999px; background: rgba(0, 212, 255, 0.06);
+      border: 1px solid rgba(0, 212, 255, 0.08); font-size: 13px; color: var(--muted);
+    }
+
+    .map-panel {
+      position: relative; padding: 24px; border-radius: var(--radius-lg);
+      border: 1px solid rgba(0, 212, 255, 0.1); background: rgba(10, 18, 38, 0.8);
+    }
+
+    .map-panel::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(0, 212, 255, 0.05), transparent 30%),
+        radial-gradient(circle at 86% 80%, rgba(0, 232, 157, 0.04), transparent 28%);
+    }
+
+    .mind-root {
+      position: relative; z-index: 1; display: inline-flex; align-items: center;
+      justify-content: center; min-height: 62px; padding: 0 22px; border-radius: 18px;
+      background: linear-gradient(135deg, var(--gold), var(--blue)); color: #060a14;
+      font-weight: 700; letter-spacing: 0.02em; margin-bottom: 18px;
+      box-shadow: 0 14px 30px rgba(0, 212, 255, 0.15), 0 0 40px rgba(0, 212, 255, 0.08);
+    }
+
+    .mind-branches { position: relative; z-index: 1; display: grid; gap: 14px; }
+
+    .mind-node {
+      position: relative; padding: 18px 18px 18px 26px; border-radius: 18px;
+      border: 1px solid rgba(0, 212, 255, 0.1); background: rgba(12, 22, 44, 0.85);
+    }
+
+    .mind-node::before {
+      content: ""; position: absolute; left: 12px; top: 22px; bottom: 22px; width: 2px;
+      background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 232, 157, 0.3));
+      border-radius: 999px; box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+    }
+
+    .mind-node h3 { margin-top: 0; font-size: 18px; }
+
+    .sub-branches { margin-top: 14px; display: grid; gap: 10px; }
+
+    .sub-node {
+      padding: 12px 14px; border-radius: 14px; background: rgba(0, 212, 255, 0.03);
+      border: 1px solid rgba(0, 212, 255, 0.06); font-size: 14px; line-height: 1.75; color: var(--ink);
+    }
+    .sub-node strong { color: var(--gold); }
+
+    .mapping-card {
+      position: relative; padding: 20px 20px 20px 44px; border-radius: 18px;
+      border: 1px solid rgba(0, 212, 255, 0.1); background: rgba(10, 18, 38, 0.85);
+    }
+
+    .mapping-card::before {
+      content: ""; position: absolute; left: 18px; top: 22px; width: 14px; height: 14px;
+      border-radius: 999px; background: linear-gradient(135deg, var(--gold), var(--teal));
+      box-shadow: 0 0 0 6px rgba(0, 212, 255, 0.08), 0 0 12px rgba(0, 212, 255, 0.15);
+    }
+
+    .mapping-card h3 { margin-top: 0; font-size: 18px; }
+
+    .mapping-meta { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .mapping-meta span {
+      padding: 7px 10px; border-radius: 999px; background: rgba(0, 212, 255, 0.05);
+      border: 1px solid rgba(0, 212, 255, 0.08); color: var(--muted); font-size: 12px;
+    }
+
+    .image-card { padding: 18px; }
+
+    .image-card img {
+      display: block; width: 100%; border-radius: 18px;
+      border: 1px solid rgba(0, 212, 255, 0.1); background: rgba(10, 18, 38, 0.6);
+    }
+
+    .footer {
+      margin-top: 24px; padding: 28px 30px; border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(79, 143, 255, 0.05));
+      border: 1px solid rgba(0, 212, 255, 0.12); color: var(--ink); box-shadow: var(--shadow);
+    }
+
+    .footer h2 { color: var(--ink); }
+    .footer p { margin-top: 12px; color: var(--muted); line-height: 1.9; max-width: 70ch; }
+
+    [data-reveal] {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 600ms ease, transform 600ms ease;
+    }
+
+    [data-reveal].visible { opacity: 1; transform: translateY(0); }
+
+    /* ============ 里程碑卡片（可点击） ============ */
+    .milestone-card {
+      position: relative;
+      padding: 22px 22px 22px 22px;
+      border-radius: var(--radius-lg);
+      background: var(--card);
+      border: 1px solid rgba(0, 212, 255, 0.1);
+      cursor: pointer;
+      transition: border-color 0.35s, box-shadow 0.35s, transform 0.25s;
+      user-select: none;
+    }
+
+    .milestone-card:hover {
+      border-color: rgba(0, 212, 255, 0.35);
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.08), var(--shadow);
+      transform: translateY(-2px);
+    }
+
+    .milestone-card:active { transform: translateY(0); }
+
+    .milestone-card .mc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .milestone-card .mc-index {
+      width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--gold), var(--blue));
+      color: #060a14; font-size: 11px; font-weight: 700;
+      box-shadow: 0 0 12px rgba(0, 212, 255, 0.25);
+      flex-shrink: 0;
+    }
+
+    .milestone-card .mc-label {
+      font-size: 11px; color: var(--muted); letter-spacing: 0.06em;
+    }
+
+    .milestone-card .mc-version {
+      padding: 3px 10px; border-radius: 999px;
+      background: rgba(0, 232, 157, 0.1); border: 1px solid rgba(0, 232, 157, 0.2);
+      color: var(--teal); font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    }
+
+    .milestone-card h3 {
+      font-size: 17px; margin: 0 0 8px 0; line-height: 1.35;
+      color: var(--ink);
+    }
+
+    .milestone-card .mc-brief {
+      font-size: 13px; color: var(--muted); line-height: 1.65;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    .milestone-card .mc-arrow {
+      position: absolute; right: 18px; bottom: 18px;
+      width: 28px; height: 28px; border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0, 212, 255, 0.06); border: 1px solid rgba(0, 212, 255, 0.1);
+      color: var(--gold); font-size: 14px;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .milestone-card:hover .mc-arrow {
+      background: rgba(0, 212, 255, 0.14);
+      transform: translateX(3px);
+    }
+
+    /* ============ 抽屉 ============ */
+    .drawer-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(2, 4, 10, 0.65);
+      backdrop-filter: blur(6px);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .drawer-overlay.open { opacity: 1; visibility: visible; }
+
+    .drawer-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 101;
+      width: min(560px, 92vw);
+      background: linear-gradient(180deg, #0b1228 0%, #080e1e 100%);
+      border-left: 1px solid rgba(0, 212, 255, 0.15);
+      box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5), -0 0 80px rgba(0, 212, 255, 0.04);
+      transform: translateX(100%);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .drawer-panel.open { transform: translateX(0); }
+
+    .drawer-header {
+      flex-shrink: 0;
+      padding: 28px 28px 0 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .drawer-header-left { display: flex; flex-direction: column; gap: 10px; }
+
+    .drawer-header-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .drawer-month-badge {
+      display: inline-flex; align-items: center; min-height: 30px; padding: 0 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--gold), var(--blue));
+      color: #060a14; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+    }
+
+    .drawer-version-badge {
+      display: inline-flex; align-items: center; min-height: 30px; padding: 0 14px;
+      border-radius: 999px;
+      background: rgba(0, 232, 157, 0.1); border: 1px solid rgba(0, 232, 157, 0.25);
+      color: var(--teal); font-size: 12px; font-weight: 600;
+    }
+
+    .drawer-title {
+      font-size: 24px; font-weight: 700; line-height: 1.3;
+      color: var(--ink); letter-spacing: -0.02em;
+    }
+
+    .drawer-close {
+      width: 40px; height: 40px; border-radius: 14px;
+      border: 1px solid rgba(0, 212, 255, 0.12);
+      background: rgba(0, 212, 255, 0.05);
+      color: var(--muted); font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+      transition: background 0.25s, color 0.25s, border-color 0.25s;
+    }
+
+    .drawer-close:hover {
+      background: rgba(0, 212, 255, 0.12); color: var(--gold); border-color: rgba(0, 212, 255, 0.3);
+    }
+
+    .drawer-divider {
+      flex-shrink: 0;
+      height: 1px; margin: 20px 28px 0 28px;
+      background: linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.02));
+    }
+
+    .drawer-body {
+      flex: 1; overflow-y: auto; padding: 24px 28px 40px 28px;
+      display: grid; gap: 24px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 212, 255, 0.15) transparent;
+    }
+
+    .drawer-body::-webkit-scrollbar { width: 5px; }
+    .drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .drawer-body::-webkit-scrollbar-thumb { background: rgba(0, 212, 255, 0.15); border-radius: 999px; }
+
+    .drawer-section {
+      border-radius: 20px;
+      padding: 22px;
+      border: 1px solid rgba(0, 212, 255, 0.08);
+    }
+
+    .drawer-section.goals {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.04), rgba(79, 143, 255, 0.02));
+      border-left: 3px solid var(--gold);
+    }
+
+    .drawer-section.outputs {
+      background: linear-gradient(135deg, rgba(0, 232, 157, 0.04), rgba(0, 212, 255, 0.02));
+      border-left: 3px solid var(--teal);
+    }
+
+    .drawer-section-title {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .drawer-section-icon {
+      width: 32px; height: 32px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+
+    .drawer-section.goals .drawer-section-icon {
+      background: rgba(0, 212, 255, 0.1); color: var(--gold);
+    }
+
+    .drawer-section.outputs .drawer-section-icon {
+      background: rgba(0, 232, 157, 0.1); color: var(--teal);
+    }
+
+    .drawer-section-label {
+      font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em;
+    }
+
+    .drawer-item-list { display: grid; gap: 10px; }
+
+    .drawer-item {
+      padding: 14px 16px; border-radius: 14px;
+      background: rgba(0, 212, 255, 0.025);
+      border: 1px solid rgba(0, 212, 255, 0.05);
+      color: var(--ink); line-height: 1.75; font-size: 14px;
+      position: relative;
+      padding-left: 32px;
+    }
+
+    .drawer-item::before {
+      content: "";
+      position: absolute; left: 14px; top: 20px;
+      width: 6px; height: 6px; border-radius: 999px;
+    }
+
+    .drawer-section.goals .drawer-item::before {
+      background: var(--gold);
+      box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+    }
+
+    .drawer-section.outputs .drawer-item::before {
+      background: var(--teal);
+      box-shadow: 0 0 6px rgba(0, 232, 157, 0.3);
+    }
+
+    .drawer-hint {
+      flex-shrink: 0;
+      padding: 14px 28px;
+      border-top: 1px solid rgba(0, 212, 255, 0.06);
+      text-align: center;
+      font-size: 12px; color: rgba(122, 139, 168, 0.5);
+      letter-spacing: 0.06em;
+    }
+
+    @media (max-width: 1100px) {
+      .hero, .mindmap-grid, .delivery-grid, .risk-grid, .image-grid { grid-template-columns: 1fr; }
+      .concept-grid, .domain-grid, .module-grid, .milestone-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 820px) {
+      .shell { width: min(100vw - 20px, 100%); padding-top: 16px; }
+      .nav { flex-direction: column; align-items: flex-start; border-radius: 28px; }
+      .section, .hero-main, .hero-side, .footer { padding: 22px; }
+      .section-head { flex-direction: column; align-items: flex-start; }
+      .concept-grid, .domain-grid, .module-grid, .milestone-grid, .hero-stats, .image-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="nav">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-copy">
+          <strong>ZENK Product Blueprint</strong>
+          <span>产品概念 · 产品域 · 研发模块 · 月度里程碑</span>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="#concept">产品概念</a>
+        <a href="#domains">产品域</a>
+        <a href="#mindmap">能力导图</a>
+        <a href="#modules">研发模块</a>
+        <a href="#milestones">月度里程碑</a>
+        <a href="#delivery">落地方式</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <article class="panel hero-main" data-reveal>
+        <span class="eyebrow">Concept to Delivery</span>
+        <h1>Zenk 产品蓝图与研发里程碑</h1>
+        <p class="hero-lead">
+          这是一页面向产品规划、研发排期和项目落地的执行蓝图。它把 Zenk 从"企业决策智能体"的概念定位，展开为产品域拆分、
+          研发模块矩阵和按月推进的可执行目标，用来统一团队认知、融资沟通和试点落地节奏。
+        </p>
+        <div class="flow">
+          <div class="flow-step">产品概念</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">产品域</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">研发模块</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">试点交付</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">生态扩张</div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <strong>8</strong>
+            <span>核心产品域：Agent、引擎、平台、数据、本体、开发者、商店、官网</span>
+          </div>
+          <div class="stat">
+            <strong>12</strong>
+            <span>按月里程碑，覆盖从 MVP 到首批商业化复制</span>
+          </div>
+          <div class="stat">
+            <strong>4</strong>
+            <span>首阶段聚焦模块：平台、数据接入、本体中心、决策智能体</span>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel hero-side" data-reveal>
+        <span class="kicker">核心判断</span>
+        <div class="stack">
+          <div class="stack-item">
+            <p>最可行策略不是同时启动全部产品，而是先让"私域数据接入 + 本体语义组织 + 对话式决策智能体"形成一个稳定闭环。</p>
+          </div>
+          <div class="stack-item">
+            <p>商业上先抓住高 ROI 场景，如预测性维护、工艺优化、企业运营问答，建立首个标杆客户，再扩展到商店和开发者生态。</p>
+          </div>
+          <div class="stack-item">
+            <p>技术上坚持"平台先可用、引擎逐步增强、生态延后开放"，避免在早期被运营系统和商品体系拖慢节奏。</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel section" id="concept" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">Concept</span>
+          <h2>产品概念层：Zenk 要解决的不是问答，而是企业决策生产力</h2>
+        </div>
+        <p>产品概念层负责定义方向，回答"为什么做""为谁做""价值如何成立"。这一层先于具体模块，是后续产品域拆分和研发边界设定的依据。</p>
+      </div>
+      <div class="concept-grid">
+        <article class="card">
+          <span class="label">价值定位</span>
+          <h3>企业专属决策智能体</h3>
+          <p>不是通用聊天工具，而是将企业私域数据、业务知识、流程经验和预测模型组织成可执行的数字员工系统。</p>
+          <div class="tag-row">
+            <span class="tag">降本增效</span>
+            <span class="tag">预测决策</span>
+            <span class="tag">知识沉淀</span>
+          </div>
+        </article>
+        <article class="card">
+          <span class="label">目标用户</span>
+          <h3>企业用户 + 创作者双边结构</h3>
+          <p>企业购买和使用数字员工，创作者沉淀场景技能和本体域，平台在供给和需求双侧同时增长。</p>
+          <div class="tag-row">
+            <span class="tag">企业总部</span>
+            <span class="tag">业务部门</span>
+            <span class="tag">开发者</span>
+          </div>
+        </article>
+        <article class="card">
+          <span class="label">竞争方式</span>
+          <h3>本体中心 + 决策引擎差异化</h3>
+          <p>用本体统一语义，用决策引擎提升推理和预测质量，再通过技能和市场放大复用效率。</p>
+          <div class="tag-row">
+            <span class="tag">可解释</span>
+            <span class="tag">可溯源</span>
+            <span class="tag">可复制</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section" id="domains" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">Product Domains</span>
+          <h2>产品域层：把愿景拆成八个相互协同的产品域</h2>
+        </div>
+        <p>这一层把抽象概念落成产品边界。每个产品域都对应明确角色、使用方式和技术责任，便于后续排模块和排团队。</p>
+      </div>
+      <div class="domain-grid">
+        <article class="card">
+          <span class="label">用户前台</span>
+          <h3>ZenkOntologyAgent</h3>
+          <p>企业用户最直接感知的产品，负责对话交互、历史会话、技能调用、可溯源输出和购买入口承接。</p>
+          <ul class="list">
+            <li>支持 Agent 形态人机交互和多模型接入。</li>
+            <li>承接公域 Skills 与私域 ZenkSkills 的执行。</li>
+            <li>输出可信答案、建议和场景任务结果。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">模型内核</span>
+          <h3>ZenkDecision Engine</h3>
+          <p>负责本体结构数据接入、图计算、树突神经网络算法和推理预测，是差异化的技术中心。</p>
+          <ul class="list">
+            <li>支持推理、预测和决策能力。</li>
+            <li>承接图谱、本体和预测模型联动。</li>
+            <li>为平台和智能体提供统一决策服务。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">平台中台</span>
+          <h3>ZenkDecision Intelligence Platform</h3>
+          <p>封装通用智能体能力、Claw 能力、RAG、权限、安全管理和运行时编排，是所有产品的统一底座。</p>
+          <ul class="list">
+            <li>会话、任务、工具、知识和权限统一调度。</li>
+            <li>支持 MemGraph、PG、本体存储和检索。</li>
+            <li>连接上层智能体与下层决策引擎。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">数据入口</span>
+          <h3>ZenkDataLink</h3>
+          <p>负责私域数据接入、映射和监控，既服务企业客户，也服务创作者构建本体域和技能。</p>
+          <ul class="list">
+            <li>支持 Excel、数据库、文档和半结构化数据接入。</li>
+            <li>支撑本体抽取、修订和数据监控。</li>
+            <li>是试点交付成功率的关键产品域。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">语义资产</span>
+          <h3>ZenkOntologyCenter</h3>
+          <p>负责本体概念域管理、抽取、生成、合并、版本管理和展示，构成企业知识资产中心。</p>
+          <ul class="list">
+            <li>支持云端和本地部署联动。</li>
+            <li>承接本体演化、编码、归一化和治理。</li>
+            <li>为知识复用和行业模板提供基础。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">生态扩展</span>
+          <h3>ZenkDevTools / ZenkStore / Official Web</h3>
+          <p>开发者工具负责技能开发与发布，应用商店负责商品化与售卖，官网负责品牌展示和入口导流。</p>
+          <ul class="list">
+            <li>ZenkDevTools：技能模板、验证、发布工具链。</li>
+            <li>ZenkStore：商品管理、技能套餐、下载与服务。</li>
+            <li>Official Web：对外品牌、内容与转化入口。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section" id="mindmap" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">Capability Mindmap</span>
+          <h2>产品能力思维导图：从能力树拆解到研发板块映射</h2>
+        </div>
+        <p>这一板块把你提供的产品能力清单重组成"能力树 + 研发连接"的视图。左侧先按产品能力做思维导图式拆解，右侧再标出要落到哪些研发板块，帮助产品和研发对齐范围。</p>
+      </div>
+      <div class="mindmap-grid">
+        <article class="map-panel">
+          <div class="mind-root">ZENK 产品能力中心</div>
+          <div class="mind-branches">
+            <div class="mind-node">
+              <h3>1. 决策智能体能力</h3>
+              <p>用户直接可见的前台能力，负责会话、理解、执行与结果表达。</p>
+              <div class="sub-branches">
+                <div class="sub-node"><strong>交互层：</strong>Agent 形态人机交互、历史会话、常用会话、移动端与 PC 同步提醒。</div>
+                <div class="sub-node"><strong>执行层：</strong>加载公域 Skills、私域 ZenkSkills、接入决策模型、关联待办与任务流程。</div>
+                <div class="sub-node"><strong>输出层：</strong>对输入进行语义拆解，生成可溯源、可信的决策建议和结果。</div>
+              </div>
+            </div>
+            <div class="mind-node">
+              <h3>2. 决策引擎与智能体平台能力</h3>
+              <p>负责真正的推理、预测和平台级编排，是系统"会思考、能调度"的核心。</p>
+              <div class="sub-branches">
+                <div class="sub-node"><strong>引擎能力：</strong>本体结构数据接入、图计算、树突神经网络、推理预测决策。</div>
+                <div class="sub-node"><strong>平台能力：</strong>通用智能体、Claw、RAG、多模型接入、MemGraph/PG、本体存储、权限安全。</div>
+                <div class="sub-node"><strong>编排能力：</strong>调用决策模型、知识库、工具链和技能服务，形成统一运行时。</div>
+              </div>
+            </div>
+            <div class="mind-node">
+              <h3>3. 数据与本体中心能力</h3>
+              <p>负责把企业数据变成可理解、可治理、可复用的语义资产。</p>
+              <div class="sub-branches">
+                <div class="sub-node"><strong>数据接入：</strong>多异构数据源接入、实时监控、安全管理、数据形成知识库。</div>
+                <div class="sub-node"><strong>本体治理：</strong>概念抽取、人工修订、关系管理、版本控制、编码归一化、能力合并和剥离。</div>
+                <div class="sub-node"><strong>联动机制：</strong>DataLink 与 OntologyCenter 联动，支持云端与本地协同管理。</div>
+              </div>
+            </div>
+            <div class="mind-node">
+              <h3>4. 生态与商业化能力</h3>
+              <p>负责把能力包装成技能、商品和入口，让平台具备开发、运营和售卖能力。</p>
+              <div class="sub-branches">
+                <div class="sub-node"><strong>开发者工具：</strong>下载模版、本体域绑定、自然语言生成工具样式、测试验证、发布 Skills。</div>
+                <div class="sub-node"><strong>应用商店：</strong>商品上传、审核、下载、公域技能维护、技能套餐组合、购买与服务支持。</div>
+                <div class="sub-node"><strong>官网入口：</strong>产品介绍、案例展示、商城跳转、品牌与销售转化。</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="map-row">
+          <div class="mapping-card">
+            <span class="label">映射 A</span>
+            <h3>能力树 1 → 交互与工作台模块 + 任务编排模块</h3>
+            <p>对应 ZenkOntologyAgent 的会话工作台、历史会话、任务待办、Skills 调用、可信输出与购买入口承接能力。</p>
+            <div class="mapping-meta">
+              <span>前端工作台</span>
+              <span>会话服务</span>
+              <span>结果溯源</span>
+              <span>任务编排</span>
+            </div>
+          </div>
+          <div class="mapping-card">
+            <span class="label">映射 B</span>
+            <h3>能力树 2 → 决策引擎模块 + 平台底座模块</h3>
+            <p>对应 ZenkDecision Engine 和 ZenkDecision Intelligence Platform 的模型服务、图计算、RAG、多模型接入、权限安全和运行时调度。</p>
+            <div class="mapping-meta">
+              <span>图计算服务</span>
+              <span>树突模型服务</span>
+              <span>RAG 编排</span>
+              <span>权限安全</span>
+            </div>
+          </div>
+          <div class="mapping-card">
+            <span class="label">映射 C</span>
+            <h3>能力树 3 → 数据接入模块 + 本体治理模块</h3>
+            <p>对应 ZenkDataLink 和 ZenkOntologyCenter 的接入器、抽取引擎、人工修订、版本管理和知识资产中心。</p>
+            <div class="mapping-meta">
+              <span>接入适配器</span>
+              <span>抽取映射</span>
+              <span>知识版本</span>
+              <span>本体治理</span>
+            </div>
+          </div>
+          <div class="mapping-card">
+            <span class="label">映射 D</span>
+            <h3>能力树 4 → 开发者生态模块 + 商业化模块</h3>
+            <p>对应 ZenkDevTools、ZenkStore、ZenkStoreCenter、ZenkSkillsCenter 和官网的技能开发、商品运营、售卖转化与服务支持能力。</p>
+            <div class="mapping-meta">
+              <span>技能模板</span>
+              <span>发布审核</span>
+              <span>商店运营</span>
+              <span>官网转化</span>
+            </div>
+          </div>
+          <div class="mapping-card">
+            <span class="label">研发优先级</span>
+            <h3>推荐优先实现顺序</h3>
+            <p>优先实现"能力树 3 → 能力树 1 → 能力树 2"的最小闭环，再在试点成功后扩展"能力树 4"的生态和商业化能力。</p>
+            <div class="mapping-meta">
+              <span>P1 数据与本体</span>
+              <span>P1 智能体工作台</span>
+              <span>P2 决策引擎增强</span>
+              <span>P3 商店与开发者</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section" id="modules" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">R&D Modules</span>
+          <h2>研发模块层：真正进入研发排期的模块切片</h2>
+        </div>
+        <p>为了可执行，产品域还要继续拆到工程模块。下面这组模块适合直接映射成研发看板和团队责任分工。</p>
+      </div>
+      <div class="module-grid">
+        <article class="card">
+          <span class="label">模块组 A</span>
+          <h3>交互与工作台模块</h3>
+          <ul class="list">
+            <li>Agent 会话工作台：多轮对话、历史会话、场景会话。</li>
+            <li>任务编排与工具调用：Skills、API、文件、代码执行。</li>
+            <li>结果溯源与可信输出：引用、推理链摘要、执行日志。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">模块组 B</span>
+          <h3>数据接入与知识治理模块</h3>
+          <ul class="list">
+            <li>数据接入适配器：Excel、DB、文档、接口、实时流。</li>
+            <li>抽取与映射：概念抽取、属性关系映射、人工修订。</li>
+            <li>知识版本管理：本体版本、变更对比、回滚与审计。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">模块组 C</span>
+          <h3>决策引擎与模型服务模块</h3>
+          <ul class="list">
+            <li>本体结构解析与图计算服务。</li>
+            <li>树突神经网络训练与推理服务。</li>
+            <li>RAG、预测、规则与模型融合编排。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">模块组 D</span>
+          <h3>平台底座与安全模块</h3>
+          <ul class="list">
+            <li>权限与租户体系、日志审计、安全管理。</li>
+            <li>工作流引擎、任务调度、运行监控。</li>
+            <li>MemGraph / PG / 对象存储 / 缓存统一接入。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">模块组 E</span>
+          <h3>开发者与技能生态模块</h3>
+          <ul class="list">
+            <li>Skills 模板、开发调试、测试验证。</li>
+            <li>一键发布、版本管理、签名与审核。</li>
+            <li>商品化包装、套餐组合、收益分成基础能力。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">模块组 F</span>
+          <h3>商业化与官网模块</h3>
+          <ul class="list">
+            <li>官网内容系统、产品介绍、案例与表单转化。</li>
+            <li>商店检索、购买、下载、续费与服务入口。</li>
+            <li>客户运营后台、商品运营与服务支持。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section" id="milestones" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">Monthly Milestones</span>
+          <h2>按月可执行里程碑：12 个月从 0 到 1 再到可复制</h2>
+        </div>
+        <p>这套排期按"概念验证、试点可研、场景交付、生态扩张"四段推进。每个月都有明确可验收结果，便于团队管理和融资沟通。点击任意月份查看详细目标与输出物。</p>
+      </div>
+      <div class="milestone-grid" id="milestoneGrid">
+        <!-- JS 动态渲染 -->
+      </div>
+    </section>
+
+    <section class="panel section" id="delivery" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">Delivery Strategy</span>
+          <h2>执行落地方式：先聚焦，再扩张</h2>
+        </div>
+        <p>这部分回答"怎么干最稳"。核心是控制前 6 个月的复杂度，把研发资源集中在可证明价值的地方。</p>
+      </div>
+      <div class="delivery-grid">
+        <article class="card">
+          <span class="label">推荐顺序</span>
+          <h3>先做什么</h3>
+          <ul class="list">
+            <li>优先做 `ZenkDecision Intelligence Platform` 作为统一入口。</li>
+            <li>同步做 `ZenkDataLink` 和 `ZenkOntologyCenter`，打通数据和知识。</li>
+            <li>随后做 `ZenkOntologyAgent`，建立用户体验和业务价值感知。</li>
+            <li>`ZenkDecision Engine` 在第 4-6 个月逐步增强，而不是一开始追求满配。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">延后投入</span>
+          <h3>后做什么</h3>
+          <ul class="list">
+            <li>`ZenkDevTools` 在试点稳定后再开放，避免过早分散研发。</li>
+            <li>`ZenkStore` 先支持内部商品化，再逐步做开放市场。</li>
+            <li>`Official Web` 作为品牌和销售入口，在商业化准备阶段上线即可。</li>
+            <li>智能体计算机应在边缘部署需求明确后进入专项研发。</li>
+          </ul>
+        </article>
+      </div>
+      <div class="risk-grid" style="margin-top: 18px;">
+        <article class="card">
+          <span class="label">组织建议</span>
+          <h3>推荐团队编组</h3>
+          <ul class="list">
+            <li>1 名产品负责人：场景定义、验收口径、客户沟通。</li>
+            <li>2 名平台工程师：工作台、权限、任务编排、接口联调。</li>
+            <li>1 名数据/本体工程师：接入、抽取、建模、知识治理。</li>
+            <li>1 名算法工程师：决策引擎、图计算、预测模型。</li>
+            <li>1 名实施顾问：客户流程梳理、上线支持、培训反馈。</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="label">关键风险</span>
+          <h3>最需要避免的三件事</h3>
+          <ul class="list">
+            <li>过早做全量平台化，导致产品、商店、生态全部半成品。</li>
+            <li>场景选择太重，首个客户就涉及多个部门和复杂改造。</li>
+            <li>忽视数据治理，只靠模型能力硬撑，最终效果不稳定。</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel section" data-reveal>
+      <div class="section-head">
+        <div>
+          <span class="label">Visual Context</span>
+          <h2>现有架构图可作为研发沟通辅助材料</h2>
+        </div>
+        <p>仓库内已有架构图资源，适合在后续版本中继续整合到页面里，辅助面向研发、投资人或合作伙伴的技术说明。</p>
+      </div>
+      <div class="image-grid">
+        <article class="card image-card">
+          <img src="./Tech_Architecture_Diagram.png" alt="技术架构图">
+        </article>
+        <article class="card image-card">
+          <img src="./Pluginzation_Architecture_Diagram.png" alt="插件化架构图">
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer" data-reveal>
+      <span class="kicker">Roadmap Summary</span>
+      <h2>最可行路径是：先把一个场景做深，再把能力做宽。</h2>
+      <p>
+        对 Zenk 来说，真正的竞争力不在"功能数量"，而在"是否能用一套稳定架构，把私域知识、决策模型和数字员工交付给企业"。
+        所以这页路线图的核心，不是把所有模块都尽快上线，而是让每个月都有明确业务结果，为后续平台化和生态化铺路。
+      </p>
+    </footer>
+  </div>
+
+  <!-- 抽屉：遮罩 -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- 抽屉：面板 -->
+  <div class="drawer-panel" id="drawerPanel" role="dialog" aria-label="月度里程碑详情">
+    <div class="drawer-header">
+      <div class="drawer-header-left">
+        <div class="drawer-header-top">
+          <span class="drawer-month-badge" id="drawerMonth"></span>
+          <span class="drawer-version-badge" id="drawerVersion" style="display:none;"></span>
+        </div>
+        <div class="drawer-title" id="drawerTitle"></div>
+      </div>
+      <button class="drawer-close" id="drawerClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="drawer-divider"></div>
+    <div class="drawer-body" id="drawerBody">
+      <!-- JS 动态渲染 -->
+    </div>
+    <div class="drawer-hint">按 ESC 或点击遮罩关闭</div>
+  </div>
+
+  <script>
+    /* ====== 里程碑数据（融合原始蓝图 + 总路标） ====== */
+    const milestones = [
+      {
+        month: '第 1 个月', index: 'M1', version: '',
+        title: '明确方向与赛道调研',
+        brief: '聚焦数智大脑、基于本体的BI、Agent形态三大方向，完成行业调研与场景选择',
+        goals: [
+          '明确做什么、解决什么问题——聚焦数智大脑、基于本体的BI、Agent形态三大方向',
+          '完成目标行业和首个场景选择，输出PRD、试点范围、ROI假设',
+          '完成行业政策、同类产品、业务赛道、竞品公司调研',
+          '工业规范、行业数据集调研与整理'
+        ],
+        outputs: [
+          '行业调研XMind（政策、竞品、赛道、市值规模、核心业务、核心技术）',
+          'BP 1.0（架构、技术、商业模式、计划）',
+          '场景确认文档、客户访谈记录、样板流程图',
+          '本体概念图初版、实例数据准备'
+        ]
+      },
+      {
+        month: '第 2 个月', index: 'M2', version: '',
+        title: '售前方案与POC演示',
+        brief: '完成售前解决方案PPT 1.0，系统故事线POC演示版本',
+        goals: [
+          '完成对外售前解决方案PPT 1.0版本（解决问题、技术亮点、价值获益）',
+          '完成产品故事线演示梳理，组织数据准备、验证系统演示效果',
+          '掌握产品亮点与功能点价值，达到内部试讲通过',
+          '数据接入工具：完成Excel、数据库、文档三类接入器和基础数据监控'
+        ],
+        outputs: [
+          '售前PPT 1.0版本（内部试讲通过）',
+          '系统故事线POC演示版本',
+          '数据源清单冻结、接入日志记录',
+          '本体可视化操作界面原型'
+        ]
+      },
+      {
+        month: '第 3 个月', index: 'M3', version: 'v0.1',
+        title: 'Agent v0.1发布与平台框架搭建',
+        brief: 'Agent对话/思维链/工具5+、管理端框架、官网门户、竞品分析',
+        goals: [
+          'Agent v0.1发布：对话（模型切换、多模态答复、文档生成）、思维链（预警弹框、待办、本体孪生、推理联动）、工具5+',
+          'AI中台管理端框架搭建（框架、权限、模块、本体中心）',
+          'ZENK官网门户上线（解决方案、应用商店、模型介绍）',
+          '集成智能院模型，调度串通；竞品分析完成'
+        ],
+        outputs: [
+          'Agent v0.1版本（含系统故事线POC演示）',
+          '管理端框架（权限、模块、本体中心）',
+          'ZENK官网门户（解决方案、应用商店、模型介绍）',
+          '售前解决方案PPT完善版'
+        ]
+      },
+      {
+        month: '第 4 个月', index: 'M4', version: 'v0.2',
+        title: 'v0.2发布·Skills装载与本体中心1.0',
+        brief: '2个Skills装载运行、ZenkStore展示、本体中心手动创建打通、数据接入工具启动',
+        goals: [
+          'Agent v0.2：验证2个演示场景联动、ZenkStore展示、工具上传加载使用、工具缩略图统一',
+          '本体中心手动创建打通；商品管理启动',
+          '数据接入工具功能开发；开发者工具启动',
+          '10个预装工具确定及高保真设计'
+        ],
+        outputs: [
+          'Agent v0.2版本（2个Skills装载运行正常）',
+          '本体中心1.0（手动创建打通）',
+          '数据接入工具初版',
+          '应用商店原型定稿、10个预装工具高保设计'
+        ]
+      },
+      {
+        month: '第 5 个月', index: 'M5', version: 'v0.3',
+        title: 'v0.3发布·工具组件化与商店联通',
+        brief: '剩余工具组件化开发、本体自动创建、应用商店前后端联通、开发者工具启动',
+        goals: [
+          'Agent剩余工具组件化开发（15+工具）',
+          '本体自动创建功能实现',
+          '数据接入工具完善',
+          '应用商店前后端联通；开发者工具启动开发'
+        ],
+        outputs: [
+          'Agent v0.3版本（15+工具、历史对话优化、提示词收藏、支持开源本地部署）',
+          '本体自动创建功能',
+          '应用商店前后端联通版',
+          '开发者工具初版'
+        ]
+      },
+      {
+        month: '第 6 个月', index: 'M6', version: 'v1.0',
+        title: 'v1.0开源发布·10+工具与决策模型',
+        brief: '对外开源、常用10个工具、工业决策模型v1.0、租户权限安全体系',
+        goals: [
+          '发布v1.0：对外开源、应用场景预置、产品迭代',
+          'ZENK模型对接，支持客户机本地文件授权训练本体孪生',
+          '工具商店对接要求与技术支持',
+          '租户、角色、审计、日志和异常回退机制补齐'
+        ],
+        outputs: [
+          'Agent v1.0开源版本',
+          '常用10个工具组件',
+          '工业决策模型v1.0',
+          '开源文档及部署指南、安全合规体系'
+        ]
+      },
+      {
+        month: '第 7 个月', index: 'M7', version: 'v1.1',
+        title: 'v1.1发布·智能建本体与移动端',
+        brief: '迭代工具/模型/商店/移动端/AI知识库，工具商店支持发布',
+        goals: [
+          '发布v1.1：迭代工具、模型、商店、移动端、AI知识库',
+          '工具商店支持发布',
+          '知识库可视化，支持AI自动建设+人工校对',
+          '做好开源后客户咨询对接、诉求整理'
+        ],
+        outputs: [
+          'Agent v1.1版本',
+          '工具商店发布功能',
+          'AI知识库可视化系统',
+          '移动端支持'
+        ]
+      },
+      {
+        month: '第 8 个月', index: 'M8', version: 'v2.0',
+        title: 'v2.0发布·硬件连接与现场验证',
+        brief: '迭代工具/模型、智能硬件连接、AI本体孪生、首个试点客户现场验证',
+        goals: [
+          '发布v2.0：迭代工具、模型迭代、硬件连接、AI本体孪生',
+          '首个试点客户现场验证',
+          '本体可视化管理，支持AI自动建设+人工校对',
+          '场景细化、功能迭代'
+        ],
+        outputs: [
+          'Agent v2.0版本',
+          '智能硬件连接支持',
+          'AI本体孪生功能',
+          '现场验证报告（使用频率、命中率、业务节省时长）'
+        ]
+      },
+      {
+        month: '第 9 个月', index: 'M9', version: 'v2.N',
+        title: 'v2.N迭代·场景细化与功能增强',
+        brief: '持续迭代工具/模型/硬件连接/AI本体孪生，场景细化',
+        goals: [
+          '发布v2.N：迭代工具、迭代模型、硬件连接、AI本体孪生',
+          '场景细化、功能迭代',
+          '本体可视化管理完善，支持AI自动建设+人工校对',
+          '沉淀首个私域Skills套餐，形成第二客户可复制的交付资产'
+        ],
+        outputs: [
+          'Agent v2.N版本',
+          '场景细化方案',
+          '首个私域Skills套餐（技能说明、部署模板、实施手册）',
+          '功能迭代清单'
+        ]
+      },
+      {
+        month: '第 10 个月', index: 'M10', version: 'v3.0',
+        title: 'v3.0发布·ZENK芯片1.0',
+        brief: 'ZENK工业决策芯片1.0、本体孪生智能体、本体管理审计',
+        goals: [
+          '发布v3.0：ZENK芯片1.0、本体孪生智能体',
+          '本体可视化管理完善',
+          '支持本体管理审计',
+          '开发者工具Alpha完善，研发和实施团队可独立创建验证发布技能'
+        ],
+        outputs: [
+          'Agent v3.0版本',
+          'ZENK工业决策芯片1.0',
+          '本体孪生智能体',
+          '开发者工具Alpha版本'
+        ]
+      },
+      {
+        month: '第 11 个月', index: 'M11', version: 'v4.0',
+        title: 'v4.0发布·芯片2.0与应用商店生态',
+        brief: 'ZENK芯片2.0随装随用、自研智能硬件、应用商店生态完善',
+        goals: [
+          '发布v4.0：ZENK 2.0芯片（支持随装随用）、自研智能硬件',
+          '应用商店生态完善',
+          '官网和商业化入口上线，形成完整对外叙事',
+          '支持芯片应用监控'
+        ],
+        outputs: [
+          'Agent v4.0版本',
+          'ZENK工业决策芯片2.0',
+          '自研智能硬件',
+          '官网（产品认知、案例浏览、咨询、购买跳转）'
+        ]
+      },
+      {
+        month: '第 12 个月', index: 'M12', version: 'v5.0',
+        title: 'v5.0发布·ZENK_AIoT工业决策平台',
+        brief: 'AI+ontology+ZENK芯片=ZENK_AIoT，形成复制性商业闭环',
+        goals: [
+          '发布v5.0工业决策平台（AI+ontology+ZENK芯片=ZENK_AIoT）',
+          '完成第二个客户复制交付，验证行业模板和平台复用效率',
+          '证明产品不依赖单次项目，具备标准化复制的商业潜力',
+          'ZENK_AIoT平台化管理'
+        ],
+        outputs: [
+          'Agent v5.0版本',
+          'ZENK_AIoT工业决策平台',
+          '第二个客户复制交付验证报告',
+          '行业模板与私域技能包标准化体系'
+        ]
+      }
+    ];
+
+    /* ====== 渲染里程碑卡片网格 ====== */
+    const grid = document.getElementById('milestoneGrid');
+    milestones.forEach((m, i) => {
+      const card = document.createElement('div');
+      card.className = 'milestone-card';
+      card.setAttribute('data-index', i);
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', m.month + ' ' + m.title);
+      card.innerHTML = `
+        <div class="mc-top">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="mc-index">${m.index}</span>
+            <span class="mc-label">${m.month}</span>
+          </div>
+          ${m.version ? '<span class="mc-version">' + m.version + '</span>' : ''}
+        </div>
+        <h3>${m.title}</h3>
+        <p class="mc-brief">${m.brief}</p>
+        <span class="mc-arrow">→</span>
+      `;
+      card.addEventListener('click', () => openDrawer(i));
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDrawer(i); } });
+      grid.appendChild(card);
+    });
+
+    /* ====== 抽屉逻辑 ====== */
+    const overlay = document.getElementById('drawerOverlay');
+    const panel = document.getElementById('drawerPanel');
+    const closeBtn = document.getElementById('drawerClose');
+    const drawerMonth = document.getElementById('drawerMonth');
+    const drawerVersion = document.getElementById('drawerVersion');
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerBody = document.getElementById('drawerBody');
+
+    function openDrawer(index) {
+      const m = milestones[index];
+
+      drawerMonth.textContent = m.index + ' · ' + m.month;
+
+      if (m.version) {
+        drawerVersion.textContent = m.version;
+        drawerVersion.style.display = '';
+      } else {
+        drawerVersion.style.display = 'none';
+      }
+
+      drawerTitle.textContent = m.title;
+
+      let html = '';
+
+      /* 本月关键目标 */
+      html += '<div class="drawer-section goals">';
+      html += '<div class="drawer-section-title">';
+      html += '<span class="drawer-section-icon">◎</span>';
+      html += '<span class="drawer-section-label">本月关键目标</span>';
+      html += '</div>';
+      html += '<div class="drawer-item-list">';
+      m.goals.forEach(g => { html += '<div class="drawer-item">' + g + '</div>'; });
+      html += '</div></div>';
+
+      /* 本月关键输出物 */
+      html += '<div class="drawer-section outputs">';
+      html += '<div class="drawer-section-title">';
+      html += '<span class="drawer-section-icon">◈</span>';
+      html += '<span class="drawer-section-label">本月关键输出物</span>';
+      html += '</div>';
+      html += '<div class="drawer-item-list">';
+      m.outputs.forEach(o => { html += '<div class="drawer-item">' + o + '</div>'; });
+      html += '</div></div>';
+
+      drawerBody.innerHTML = html;
+      drawerBody.scrollTop = 0;
+
+      overlay.classList.add('open');
+      panel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+      overlay.classList.remove('open');
+      panel.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    overlay.addEventListener('click', closeDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) closeDrawer();
+    });
+
+    /* ====== 滚动揭示 ====== */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+
+    document.querySelectorAll("[data-reveal]").forEach((node, index) => {
+      node.style.transitionDelay = `${Math.min(index * 70, 420)}ms`;
+      observer.observe(node);
+    });
+  </script>
+</body>
+</html>
