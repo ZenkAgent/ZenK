@@ -1,0 +1,2854 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>本体数据管理中心 - 2026版</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #000f25 0%, #09162d 52%, #0a1220 100%);
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+
+        :root {
+            --modal-panel-bg: #1c314b;
+        }
+
+        #relationFilterPanel,
+        #nodeEditorPanel,
+        #enterpriseDocsOverlay,
+        #schemaBrowserOverlay,
+        #conflictModal,
+        #ontologyModal,
+        #commonModalOverlay {
+            --modal-surface-bg: var(--modal-panel-bg);
+            --modal-surface-alt: #162f4d;
+        }
+
+        .glass-panel {
+            background: var(--modal-panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(87, 149, 255, 0.18);
+            box-shadow: 0 24px 60px rgba(2, 10, 28, 0.45);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .schema-tab-btn.active {
+            background: rgba(59, 130, 246, 0.08);
+            color: #2563eb;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .doc-tab-btn.active {
+            background: rgba(59, 130, 246, 0.08);
+            color: #2563eb;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .doc-tab-btn.active .iconify {
+            color: #2563eb;
+        }
+
+        canvas {
+            cursor: move;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* 浅色主题全局覆盖 */
+        .theme-transition {
+            transition: all 0.3s ease;
+        }
+
+        .light-floating-panel {
+            background: var(--modal-panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(87, 149, 255, 0.18);
+            box-shadow: 0 18px 40px rgba(2, 10, 28, 0.4);
+        }
+
+        .light-theme-section {
+            background: rgba(7, 20, 42, 0.9);
+        }
+
+        .bg-white,
+        .bg-white\/80,
+        .bg-white\/90,
+        .bg-white\/95,
+        .bg-slate-50,
+        .bg-slate-50\/30,
+        .bg-slate-50\/50,
+        .bg-slate-50\/80,
+        .bg-slate-100 {
+            background-color: #0b1b33 !important;
+        }
+
+        .bg-slate-200,
+        .bg-gray-200 {
+            background-color: #152846 !important;
+        }
+
+        .bg-blue-50,
+        .bg-blue-50\/50,
+        .bg-indigo-50,
+        .bg-indigo-50\/50,
+        .bg-emerald-50,
+        .bg-emerald-50\/20,
+        .bg-purple-50\/20,
+        .bg-red-50 {
+            background-color: #102646 !important;
+        }
+
+        .border-slate-50,
+        .border-slate-100,
+        .border-slate-200,
+        .border-gray-200,
+        .border-white\/50 {
+            border-color: rgba(87, 149, 255, 0.16) !important;
+        }
+
+        .text-slate-800,
+        .text-slate-700,
+        .text-slate-600 {
+            color: #dbe7ff !important;
+        }
+
+        .text-slate-500,
+        .text-slate-400,
+        .text-slate-300 {
+            color: #92a7c8 !important;
+        }
+
+        .border-gray-700,
+        .border-gray-800 {
+            border-color: rgba(87, 149, 255, 0.14) !important;
+        }
+
+        .bg-gray-900,
+        .bg-gray-950,
+        .bg-gray-800,
+        .bg-gray-800\/30,
+        .bg-gray-800\/40,
+        .bg-gray-950\/50,
+        .bg-black\/30 {
+            background-color: #08172d !important;
+        }
+
+        .text-gray-400,
+        .text-gray-300 {
+            color: #8ea6c9 !important;
+        }
+
+        .text-gray-500,
+        .text-gray-700,
+        .text-gray-900 {
+            color: #92a7c8 !important;
+        }
+
+        .hover\:bg-slate-100:hover,
+        .hover\:bg-slate-200:hover,
+        .hover\:bg-blue-50:hover,
+        .hover\:bg-blue-100:hover,
+        .hover\:bg-gray-700:hover,
+        .hover\:bg-gray-800\/40:hover {
+            background-color: #122848 !important;
+        }
+
+        .border-l.border-gray-200,
+        .border-r.border-slate-200,
+        .border-b.border-slate-200,
+        .border-t.border-slate-200,
+        .border-t.border-gray-200 {
+            border-color: rgba(87, 149, 255, 0.16) !important;
+        }
+
+        #relationFilterPanel h3,
+        #nodeEditorPanel h3,
+        #conflictModal h3,
+        #addNodeModal h4,
+        #commonModalOverlay #modalTitle,
+        #enterpriseDocsOverlay h3,
+        #schemaBrowserOverlay h3 {
+            font-size: 0.875rem !important;
+            line-height: 1.25rem !important;
+            font-weight: 700 !important;
+            color: #f8fbff !important;
+            text-shadow: 0 0 18px rgba(56, 152, 255, 0.12);
+        }
+
+        #relationFilterPanel .bg-blue-50\/50,
+        #nodeEditorPanel .bg-blue-50\/50,
+        #conflictModal .bg-red-50,
+        #addNodeModal .bg-slate-50\/80,
+        #commonModalOverlay .bg-white\/50,
+        #enterpriseDocsOverlay .bg-slate-50,
+        #schemaBrowserOverlay .bg-slate-50 {
+            background: #162f4d !important;
+            border-color: rgba(103, 168, 255, 0.22) !important;
+        }
+
+        #relationFilterPanel,
+        #nodeEditorPanel,
+        #conflictModal .glass-panel,
+        #ontologyModal .relative,
+        #commonModalOverlay .glass-panel,
+        #enterpriseDocsOverlay .glass-panel,
+        #schemaBrowserOverlay .glass-panel {
+            background: var(--modal-panel-bg) !important;
+            backdrop-filter: blur(20px) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 24px 60px rgba(2, 10, 28, 0.45) !important;
+        }
+
+        #relationFilterPanel .bg-white,
+        #relationFilterPanel .bg-white\/80,
+        #relationFilterPanel .bg-white\/90,
+        #relationFilterPanel .bg-white\/95,
+        #relationFilterPanel .bg-slate-50,
+        #relationFilterPanel .bg-slate-50\/30,
+        #relationFilterPanel .bg-slate-50\/50,
+        #relationFilterPanel .bg-slate-50\/80,
+        #relationFilterPanel .bg-slate-100,
+        #nodeEditorPanel .bg-white,
+        #nodeEditorPanel .bg-white\/80,
+        #nodeEditorPanel .bg-white\/90,
+        #nodeEditorPanel .bg-white\/95,
+        #nodeEditorPanel .bg-slate-50,
+        #nodeEditorPanel .bg-slate-50\/30,
+        #nodeEditorPanel .bg-slate-50\/50,
+        #nodeEditorPanel .bg-slate-50\/80,
+        #nodeEditorPanel .bg-slate-100,
+        #enterpriseDocsOverlay .bg-white,
+        #enterpriseDocsOverlay .bg-white\/80,
+        #enterpriseDocsOverlay .bg-white\/90,
+        #enterpriseDocsOverlay .bg-white\/95,
+        #enterpriseDocsOverlay .bg-slate-50,
+        #enterpriseDocsOverlay .bg-slate-50\/30,
+        #enterpriseDocsOverlay .bg-slate-50\/50,
+        #enterpriseDocsOverlay .bg-slate-50\/80,
+        #enterpriseDocsOverlay .bg-slate-100,
+        #schemaBrowserOverlay .bg-white,
+        #schemaBrowserOverlay .bg-white\/80,
+        #schemaBrowserOverlay .bg-white\/90,
+        #schemaBrowserOverlay .bg-white\/95,
+        #schemaBrowserOverlay .bg-slate-50,
+        #schemaBrowserOverlay .bg-slate-50\/30,
+        #schemaBrowserOverlay .bg-slate-50\/50,
+        #schemaBrowserOverlay .bg-slate-50\/80,
+        #schemaBrowserOverlay .bg-slate-100,
+        #conflictModal .bg-white,
+        #conflictModal .bg-white\/80,
+        #conflictModal .bg-white\/90,
+        #conflictModal .bg-white\/95,
+        #conflictModal .bg-slate-50,
+        #conflictModal .bg-slate-50\/30,
+        #conflictModal .bg-slate-50\/50,
+        #conflictModal .bg-slate-50\/80,
+        #conflictModal .bg-slate-100,
+        #ontologyModal .bg-white,
+        #ontologyModal .bg-white\/80,
+        #ontologyModal .bg-white\/90,
+        #ontologyModal .bg-white\/95,
+        #ontologyModal .bg-slate-50,
+        #ontologyModal .bg-slate-50\/30,
+        #ontologyModal .bg-slate-50\/50,
+        #ontologyModal .bg-slate-50\/80,
+        #ontologyModal .bg-slate-100,
+        #commonModalOverlay .bg-white,
+        #commonModalOverlay .bg-white\/80,
+        #commonModalOverlay .bg-white\/90,
+        #commonModalOverlay .bg-white\/95,
+        #commonModalOverlay .bg-slate-50,
+        #commonModalOverlay .bg-slate-50\/30,
+        #commonModalOverlay .bg-slate-50\/50,
+        #commonModalOverlay .bg-slate-50\/80,
+        #commonModalOverlay .bg-slate-100 {
+            background: var(--modal-surface-bg) !important;
+        }
+
+        #relationFilterPanel .bg-blue-50,
+        #relationFilterPanel .bg-blue-50\/50,
+        #relationFilterPanel .bg-indigo-50,
+        #relationFilterPanel .bg-indigo-50\/50,
+        #relationFilterPanel .bg-emerald-50,
+        #relationFilterPanel .bg-green-50,
+        #relationFilterPanel .bg-purple-50\/20,
+        #relationFilterPanel .bg-red-50,
+        #nodeEditorPanel .bg-blue-50,
+        #nodeEditorPanel .bg-blue-50\/50,
+        #nodeEditorPanel .bg-indigo-50,
+        #nodeEditorPanel .bg-indigo-50\/50,
+        #nodeEditorPanel .bg-emerald-50,
+        #nodeEditorPanel .bg-green-50,
+        #nodeEditorPanel .bg-purple-50\/20,
+        #nodeEditorPanel .bg-red-50,
+        #enterpriseDocsOverlay .bg-blue-50,
+        #enterpriseDocsOverlay .bg-blue-50\/50,
+        #enterpriseDocsOverlay .bg-indigo-50,
+        #enterpriseDocsOverlay .bg-indigo-50\/50,
+        #enterpriseDocsOverlay .bg-emerald-50,
+        #enterpriseDocsOverlay .bg-green-50,
+        #enterpriseDocsOverlay .bg-purple-50\/20,
+        #enterpriseDocsOverlay .bg-red-50,
+        #schemaBrowserOverlay .bg-blue-50,
+        #schemaBrowserOverlay .bg-blue-50\/50,
+        #schemaBrowserOverlay .bg-indigo-50,
+        #schemaBrowserOverlay .bg-indigo-50\/50,
+        #schemaBrowserOverlay .bg-emerald-50,
+        #schemaBrowserOverlay .bg-green-50,
+        #schemaBrowserOverlay .bg-purple-50\/20,
+        #schemaBrowserOverlay .bg-red-50,
+        #conflictModal .bg-blue-50,
+        #conflictModal .bg-blue-50\/50,
+        #conflictModal .bg-indigo-50,
+        #conflictModal .bg-indigo-50\/50,
+        #conflictModal .bg-emerald-50,
+        #conflictModal .bg-green-50,
+        #conflictModal .bg-purple-50\/20,
+        #conflictModal .bg-red-50,
+        #ontologyModal .bg-blue-50,
+        #ontologyModal .bg-blue-50\/50,
+        #ontologyModal .bg-indigo-50,
+        #ontologyModal .bg-indigo-50\/50,
+        #ontologyModal .bg-emerald-50,
+        #ontologyModal .bg-green-50,
+        #ontologyModal .bg-purple-50\/20,
+        #ontologyModal .bg-red-50,
+        #commonModalOverlay .bg-blue-50,
+        #commonModalOverlay .bg-blue-50\/50,
+        #commonModalOverlay .bg-indigo-50,
+        #commonModalOverlay .bg-indigo-50\/50,
+        #commonModalOverlay .bg-emerald-50,
+        #commonModalOverlay .bg-green-50,
+        #commonModalOverlay .bg-purple-50\/20,
+        #commonModalOverlay .bg-red-50 {
+            background: var(--modal-surface-alt) !important;
+        }
+
+        #commonModalOverlay > .glass-panel,
+        #commonModalOverlay > .glass-panel > #commonModalContent,
+        #commonModalOverlay > .glass-panel > #modalFooter {
+            background: var(--modal-surface-bg) !important;
+        }
+
+        #commonModalOverlay > .glass-panel > div:first-child {
+            background: #162f4d !important;
+            border-bottom-color: rgba(103, 168, 255, 0.22) !important;
+        }
+
+        #commonModalOverlay #modalSubtitle {
+            font-size: 0.625rem !important;
+            line-height: 1 !important;
+            font-weight: 500 !important;
+            color: #a9c0e6 !important;
+            white-space: nowrap !important;
+            letter-spacing: 0 !important;
+        }
+
+        #relationFilterPanel select,
+        #nodeEditorPanel select,
+        #ontologyModal select,
+        #commonModalOverlay select,
+        #enterpriseDocsOverlay select,
+        #schemaBrowserOverlay select {
+            background: #162f4d !important;
+            color: #eef4ff !important;
+            border-color: rgba(103, 168, 255, 0.24) !important;
+        }
+
+        #relationFilterPanel option,
+        #nodeEditorPanel option,
+        #ontologyModal option,
+        #commonModalOverlay option,
+        #enterpriseDocsOverlay option,
+        #schemaBrowserOverlay option {
+            background: #162f4d !important;
+            color: #eef4ff !important;
+        }
+
+        #timeSeriesBtn {
+            background: #162f4d !important;
+            border-color: rgba(103, 168, 255, 0.24) !important;
+        }
+
+        #timeSeriesBtn:hover {
+            background: #1d3b61 !important;
+        }
+
+        #modalSubtitle,
+        #relationFilterPanel label,
+        #nodeEditorPanel label,
+        #conflictModal label,
+        #addNodeModal label,
+        #enterpriseDocsOverlay p,
+        #schemaBrowserOverlay p {
+            color: #a9c0e6 !important;
+        }
+
+        #relationFilterPanel button,
+        #nodeEditorPanel button,
+        #conflictModal button,
+        #addNodeModal button,
+        #commonOverlay button,
+        #enterpriseDocsOverlay button,
+        #schemaBrowserOverlay button {
+            color: #e8f1ff;
+        }
+
+        button,
+        .shadow-sm,
+        .shadow-md,
+        .shadow-lg,
+        .shadow-xl,
+        .shadow-2xl,
+        [class*="shadow-blue-"],
+        [class*="shadow-red-"],
+        [class*="shadow-green-"],
+        [class*="shadow-purple-"],
+        [class*="shadow-indigo-"] {
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35) !important;
+        }
+
+        #relationFilterPanel button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600),
+        #nodeEditorPanel button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600),
+        #conflictModal button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600),
+        #addNodeModal button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600),
+        #commonOverlay button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600),
+        #enterpriseDocsOverlay button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600),
+        #schemaBrowserOverlay button:not(.text-red-400):not(.text-red-600):not(.text-green-500):not(.text-blue-600) {
+            border-color: rgba(103, 168, 255, 0.22) !important;
+            background-color: #102646 !important;
+        }
+
+        #relationFilterPanel button:hover,
+        #nodeEditorPanel button:hover,
+        #conflictModal button:hover,
+        #addNodeModal button:hover,
+        #commonOverlay button:hover,
+        #enterpriseDocsOverlay button:hover,
+        #schemaBrowserOverlay button:hover {
+            background-color: #17345d !important;
+            color: #ffffff !important;
+        }
+
+        #conflictModal .text-red-400,
+        #conflictModal .text-red-600,
+        #commonModalOverlay .text-red-400,
+        #commonModalOverlay .text-red-600 {
+            color: #ff8e9d !important;
+        }
+
+        #conflictModal .bg-red-50,
+        #conflictModal .bg-green-50,
+        #commonModalOverlay .bg-red-50,
+        #commonModalOverlay .bg-green-50 {
+            background-color: #102646 !important;
+        }
+
+        #conflictModal .border-red-100,
+        #conflictModal .border-red-200,
+        #conflictModal .border-green-100,
+        #conflictModal .border-green-200,
+        #commonModalOverlay .border-red-100,
+        #commonModalOverlay .border-red-200,
+        #commonModalOverlay .border-green-100,
+        #commonModalOverlay .border-green-200 {
+            border-color: rgba(103, 168, 255, 0.22) !important;
+        }
+
+        .export-format-option {
+            background-color: #102646 !important;
+            border-color: rgba(103, 168, 255, 0.22) !important;
+        }
+
+        .export-format-option .text-xs,
+        .export-format-option .text-sm {
+            color: #eef4ff !important;
+        }
+
+        .export-format-option .text-\[10px\] {
+            color: #a9c0e6 !important;
+        }
+
+        .export-format-option.active {
+            background-color: #17345d !important;
+            border-color: #4c9dff !important;
+            box-shadow: 0 0 0 1px rgba(76, 157, 255, 0.25);
+        }
+
+        @keyframes dash-move {
+            to { stroke-dashoffset: -20; }
+        }
+
+        .node-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 20;
+        }
+
+        .node-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-color: #3b82f6;
+        }
+
+        .entity-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            background: #f0f9ff;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+            font-weight: 600;
+        }
+    </style></head>
+<body class="h-screen flex flex-col text-slate-800">
+<!-- Top Header -->
+<header class="h-16 glass-panel border-b border-slate-200 flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center neon-border">
+<span class="iconify text-2xl text-white" data-icon="material-symbols:account-tree-rounded"></span>
+</div>
+<div>
+<h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    本体数据管理中心 <span class="text-xs font-normal text-slate-400 ml-2">V4.2.0</span>
+</h1>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest leading-none">Intelligence Ontology Engine</p>
+</div>
+</div>
+<div class="flex items-center gap-8 text-sm">
+<div class="flex flex-col items-end">
+<span class="text-blue-600 font-medium tracking-wider">2026年03月20日</span>
+<span class="text-[10px] text-slate-400">系统运行时间：1248 小时</span>
+</div>
+<div class="flex items-center gap-4 border-l border-slate-200 pl-8">
+<button class="text-slate-400 hover:text-blue-600 transition-colors">
+<span class="iconify text-xl" data-icon="material-symbols:notifications-outline"></span>
+</button>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 cursor-pointer hover:bg-slate-200 transition-all">
+<img alt="User Avatar" class="w-6 h-6 rounded-full border border-blue-500" src="https://modao.cc/agent-py/media/generated_images/2026-03-20/a0ad3c374c4c446bba39b48365ee08bc.jpg"/>
+<span class="text-xs font-medium text-slate-700">管理员01</span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex overflow-hidden relative">
+<!-- Left Section: Data Source & AI Control -->
+<aside class="w-80 h-full glass-panel border-r border-slate-200 flex flex-col z-20">
+<div class="p-4 border-b border-slate-200">
+<h2 class="text-sm font-semibold flex items-center gap-2 mb-4 text-slate-700">
+<span class="iconify text-blue-500" data-icon="material-symbols:database"></span>
+                    数据源智能接入
+                </h2>
+<!-- Category: Databases -->
+<div class="mb-5">
+<label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-2 block">关系型数据库</label>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2 rounded bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm cursor-pointer group transition-all" id="sqlServerBtn">
+<div class="flex items-center gap-2 text-slate-600">
+<span class="iconify text-orange-500" data-icon="logos:microsoft-sql-server"></span>
+<span class="text-xs">MSSQLServer</span>
+</div>
+<span class="iconify text-green-500 text-[10px]" data-icon="material-symbols:check-circle"></span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all" id="oracleBtn">
+<div class="flex items-center gap-2 text-slate-600">
+<span class="iconify text-red-500" data-icon="logos:oracle"></span>
+<span class="text-xs">Oracle (备用节点)</span>
+</div>
+<span class="iconify text-slate-300 text-[10px]" data-icon="material-symbols:cloud-off"></span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center justify-between p-2 rounded bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all" id="mysqlBtn">
+<div class="flex items-center gap-2 text-slate-600">
+<span class="iconify text-blue-500" data-icon="logos:mysql"></span>
+<span class="text-xs">MySQL</span>
+</div>
+<span class="iconify text-green-500 text-[10px]" data-icon="material-symbols:check-circle"></span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all" id="postgresBtn">
+<div class="flex items-center gap-2 text-slate-600">
+<span class="iconify text-indigo-500" data-icon="logos:postgresql"></span>
+<span class="text-xs">PostgreSQL</span>
+</div>
+<span class="iconify text-green-500 text-[10px]" data-icon="material-symbols:check-circle"></span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center justify-between p-2 rounded bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all" id="mongodbBtn">
+<div class="flex items-center gap-2 text-slate-600">
+<span class="iconify text-green-600" data-icon="logos:mongodb"></span>
+<span class="text-xs">MongoDB</span>
+</div>
+<span class="iconify text-green-500 text-[10px]" data-icon="material-symbols:check-circle"></span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all" id="redisBtn">
+<div class="flex items-center gap-2 text-slate-600">
+<span class="iconify text-red-600" data-icon="logos:redis"></span>
+<span class="text-xs">Redis</span>
+</div>
+<span class="iconify text-green-500 text-[10px]" data-icon="material-symbols:check-circle"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Category: Time Series Data (New) -->
+<div class="mb-5">
+<label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-2 block">时序数据源</label>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2 rounded bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:border-blue-400 hover:shadow-md cursor-pointer group transition-all" id="timeSeriesBtn">
+<div class="flex items-center gap-2 text-slate-700 font-medium">
+<span class="iconify text-indigo-600" data-icon="material-symbols:timeline"></span>
+<span class="text-xs uppercase">PLM 时序数据 (常规车)</span>
+</div>
+<span class="iconify text-blue-500 animate-pulse text-[12px]" data-icon="material-symbols:bolt"></span>
+</div>
+</div>
+</div>
+<!-- Category: Unstructured Data -->
+<div class="mb-5">
+<label class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-2 block">非结构化资料</label>
+<div class="grid grid-cols-2 gap-2">
+<button class="p-2 rounded bg-white border border-slate-100 hover:bg-blue-50 hover:border-blue-200 flex flex-col items-center gap-1 transition-all" id="enterpriseDocsBtn">
+<span class="iconify text-lg text-blue-500" data-icon="material-symbols:description"></span>
+<span class="text-[10px] text-slate-600">企业文档</span>
+</button>
+<button class="p-2 rounded bg-white border border-slate-100 hover:bg-blue-50 hover:border-blue-200 flex flex-col items-center gap-1 transition-all" id="meetingNotesBtn">
+<span class="iconify text-lg text-purple-500" data-icon="material-symbols:record-voice-over"></span>
+<span class="text-[10px] text-slate-600">会议记录</span>
+</button>
+<button class="p-2 rounded bg-gray-800/40 border border-gray-700 hover:bg-blue-600/20 flex flex-col items-center gap-1 transition-all" id="inspectionImagesBtn">
+<span class="iconify text-lg text-green-400" data-icon="material-symbols:camera-enhance"></span>
+<span class="text-[10px]">巡检图片</span>
+</button>
+<button class="p-2 rounded bg-gray-800/40 border border-gray-700 hover:bg-blue-600/20 flex flex-col items-center gap-1 transition-all" id="voiceMemosBtn">
+<span class="iconify text-lg text-yellow-400" data-icon="material-symbols:mic"></span>
+<span class="text-[10px]">语音记录</span>
+</button></div>
+</div>
+</div>
+<!-- AI Processing Panel -->
+<div class="flex-1 p-4 light-theme-section border-t border-gray-200 overflow-y-auto custom-scrollbar">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xs font-bold text-blue-700">AI 智能提取引擎</h3>
+<div class="animate-pulse flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+<span class="text-[10px] text-green-600 font-bold">就绪</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="p-3 rounded-lg bg-blue-50 border border-blue-200">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs text-blue-800 font-medium">生成进度</span>
+<span class="text-xs font-mono text-blue-600 font-bold">78%</span>
+</div>
+<div class="w-full bg-gray-200 rounded-full h-1.5 mb-3 overflow-hidden">
+<div class="bg-blue-600 h-full w-[78%] shadow-sm animate-pulse"></div>
+</div>
+<div class="text-[10px] text-gray-500 leading-relaxed font-mono italic">
+                            正在从「2026Q1巡检记录.pdf」中识别：电力设备本体、磨损程度、修正关系...
+                        </div>
+</div>
+<div class="border-l-2 border-gray-300 pl-3 py-1 space-y-3">
+<div class="text-[10px]">
+<p class="text-gray-400">10:42:01</p>
+<p class="text-gray-700 font-medium">成功解构 SQL 架构，识别 45 个物理表项</p>
+</div>
+<div class="text-[10px]">
+<p class="text-gray-400">10:42:15</p>
+<p class="text-gray-700 font-medium">图像语义识别完成，检测到「核心变压器」及其属性</p>
+</div>
+<div class="text-[10px]">
+<p class="text-blue-600 font-bold">10:43:00</p>
+<p class="text-gray-900 font-bold">发现 12 个潜在冲突关系待人工审核</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-gray-200 light-theme-section">
+<button class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center gap-2 font-bold shadow-lg shadow-blue-200 transition-all hover:scale-[1.02] active:scale-95" id="generateOntologyBtn">
+<span class="iconify" data-icon="material-symbols:bolt"></span>
+                    立即生成本体
+                </button>
+</div>
+</aside>
+<!-- Middle Section: Knowledge Graph Canvas -->
+<section class="flex-1 relative bg-[radial-gradient(circle_at_center,_#000f25_0%,_#001025_100%)]">
+<!-- Canvas Tools Overlays -->
+<div class="absolute top-6 left-6 flex gap-3 items-center">
+<div class="glass-panel rounded-lg p-1 flex gap-1 shadow-sm">
+<button class="p-2 hover:bg-slate-100 rounded transition-colors text-blue-600" title="自适应窗口">
+<span class="iconify" data-icon="material-symbols:fullscreen"></span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded transition-colors text-slate-600" title="放大">
+<span class="iconify" data-icon="material-symbols:add-circle-outline"></span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded transition-colors text-slate-600" title="缩小">
+<span class="iconify" data-icon="material-symbols:remove-circle-outline"></span>
+</button>
+</div>
+<div class="glass-panel flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm">
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">版本历史:</span>
+<select class="bg-transparent border-none text-xs font-semibold text-blue-600 outline-none cursor-pointer" id="ontology-version">
+<option value="v4.2.0">V4.2.0 (当前)</option>
+<option value="v4.1.5">V4.1.5 (2026/03/15)</option>
+<option value="v4.0.0">V4.0.0 (2026/03/01)</option>
+</select>
+</div>
+</div>
+<div class="glass-panel rounded-lg p-1 flex gap-1 shadow-sm">
+<button class="p-2 hover:bg-slate-100 rounded transition-colors text-slate-600" title="导出为JSON">
+<span class="iconify" data-icon="material-symbols:ios-share"></span>
+</button>
+<button class="p-2 hover:bg-slate-100 rounded transition-colors text-slate-600" title="图表设置">
+<span class="iconify" data-icon="material-symbols:settings-suggest"></span>
+</button>
+</div>
+
+<div class="absolute top-6 right-6 flex flex-col gap-3 items-end">
+<div class="glass-panel rounded-lg px-4 py-2 border border-blue-200 shadow-sm">
+<div class="flex items-center gap-4 text-xs font-semibold text-slate-700">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+<span>概念 (42)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+<span>属性 (128)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 border border-dashed border-slate-400"></span>
+<span>关系 (86)</span>
+</div>
+</div>
+</div>
+<!-- Export & Filter Buttons -->
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-md border border-blue-200 rounded-lg shadow-sm hover:shadow-md hover:bg-blue-50 text-blue-600 transition-all group" onclick="toggleRelationFilter()">
+<span class="iconify text-lg" data-icon="material-symbols:filter-list-rounded"></span>
+<span class="text-xs font-bold tracking-wide">关系过滤</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-md border border-blue-200 rounded-lg shadow-sm hover:shadow-md hover:bg-blue-50 text-blue-600 transition-all group" onclick="openExportModal()">
+<span class="iconify text-lg group-hover:rotate-12 transition-transform" data-icon="material-symbols:ios-share"></span>
+<span class="text-xs font-bold tracking-wide">导出</span>
+</button>
+</div>
+</div>
+<!-- 关系过滤面板 -->
+<div class="absolute top-6 right-[320px] w-80 glass-panel rounded-2xl shadow-2xl border border-blue-200 flex-col overflow-hidden bg-white/95 hidden transition-all duration-300 z-30" id="relationFilterPanel">
+<div class="p-4 border-b border-slate-100 flex items-center justify-between bg-blue-50/50">
+<div class="flex items-center gap-2">
+<span class="iconify text-xl text-blue-600" data-icon="material-symbols:filter-alt-outline"></span>
+<h3 class="text-sm font-bold text-slate-800">关系过滤设置</h3>
+</div>
+<button class="p-1 hover:bg-slate-200 rounded-lg transition-colors" onclick="toggleRelationFilter()">
+<span class="iconify text-lg text-slate-400" data-icon="material-symbols:close"></span>
+</button>
+</div>
+<div class="p-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
+<!-- 关系类型 -->
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">关系类型</label>
+<div class="grid grid-cols-2 gap-2" id="filter-relation-types">
+<label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+<input checked="" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded" type="checkbox" value="父子关系"/>
+<span class="text-xs text-slate-700">父子关系</span>
+</label>
+<label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+<input checked="" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded" type="checkbox" value="关联关系"/>
+<span class="text-xs text-slate-700">关联关系</span>
+</label>
+<label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+<input checked="" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded" type="checkbox" value="依赖关系"/>
+<span class="text-xs text-slate-700">依赖关系</span>
+</label>
+<label class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+<input checked="" class="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300 rounded" type="checkbox" value="包含关系"/>
+<span class="text-xs text-slate-700">包含关系</span>
+</label>
+</div>
+</div>
+<!-- 权重阈值 -->
+<div>
+<div class="flex justify-between items-center mb-2 ml-1">
+<label class="text-[10px] font-bold text-slate-400 uppercase">关系强度 (权重阈值)</label>
+<span class="text-xs font-bold text-blue-600" id="weight-value">0.0</span>
+</div>
+<input class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" id="filter-weight" max="1" min="0" oninput="document.getElementById('weight-value').innerText = this.value" step="0.1" type="range" value="0"/>
+</div>
+<!-- 节点类型 -->
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">节点类型过滤 (源/目标)</label>
+<select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800" id="filter-node-type">
+<option value="all">显示所有节点类型</option>
+<option value="工艺参数">工艺参数</option>
+<option value="设备参数">设备参数</option>
+<option value="质量标准">质量标准</option>
+<option value="工序节点">工序节点</option>
+</select>
+</div>
+<!-- 时间范围 -->
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">建立时间范围</label>
+<div class="flex items-center gap-2">
+<input class="flex-1 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-700 outline-none focus:border-blue-500" id="filter-date-start" type="date" value="2026-01-01"/>
+<span class="text-slate-400 text-xs">-</span>
+<input class="flex-1 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-700 outline-none focus:border-blue-500" id="filter-date-end" type="date" value="2026-03-20"/>
+</div>
+</div>
+</div>
+<div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+<button class="flex-1 py-2 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5 shadow-sm" onclick="resetFilters()">
+<span class="iconify" data-icon="material-symbols:restart-alt-rounded"></span> 重置
+        </button>
+<button class="flex-[1.5] py-2 bg-blue-600 rounded-xl text-xs font-bold text-white hover:bg-blue-700 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-200" onclick="applyFilters()">
+<span class="iconify" data-icon="material-symbols:check-circle"></span> 应用过滤
+        </button>
+</div>
+</div>
+<!-- Canvas Placeholder -->
+<div class="relative w-full h-full">
+<canvas class="w-full h-full" id="ontologyCanvas"></canvas>
+<!-- 本体编辑面板 (Hidden by default) -->
+<div class="absolute top-6 right-6 w-72 glass-panel rounded-2xl shadow-2xl border border-blue-200 flex-col overflow-hidden bg-white/90 translate-x-[calc(100%+24px)] transition-transform duration-300 z-20 flex" id="nodeEditorPanel">
+<div class="p-4 border-b border-slate-100 flex items-center justify-between bg-blue-50/50">
+<div class="flex items-center gap-2">
+<span class="iconify text-xl text-blue-600" data-icon="material-symbols:edit-document-outline"></span>
+<h3 class="text-sm font-bold text-slate-800">本体编辑</h3>
+</div>
+<button class="p-1 hover:bg-slate-200 rounded-lg transition-colors" onclick="closeNodeEditor()">
+<span class="iconify text-lg text-slate-400" data-icon="material-symbols:close"></span>
+</button>
+</div>
+<div class="p-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">节点名称</label>
+<input class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800" id="editNodeLabel" type="text"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">所属分类</label>
+<select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 cursor-pointer" id="editNodeCategory">
+<option value="工艺参数">工艺参数</option>
+<option value="设备参数">设备参数</option>
+<option value="质量标准">质量标准</option>
+<option value="工序节点">工序节点</option>
+<option value="工艺步骤">工艺步骤</option>
+</select>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">关联属性</label>
+<div class="space-y-2" id="nodeAttributes">
+<!-- Dynamic attributes -->
+</div>
+<button class="mt-3 w-full py-1.5 border border-dashed border-slate-200 rounded-lg text-xs text-slate-400 hover:bg-slate-50 hover:text-blue-500 transition-all flex items-center justify-center gap-1">
+<span class="iconify" data-icon="material-symbols:add"></span> 添加属性
+                    </button>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">本体关联</label>
+<div class="space-y-2" id="nodeRelations">
+<!-- Dynamic relations -->
+</div>
+</div>
+</div>
+<div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+<button class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-blue-500/20" onclick="saveNodeEdit()">保存变更</button>
+<button class="px-4 py-2 border border-slate-200 text-slate-500 text-xs font-medium rounded-lg hover:bg-slate-100 transition-all" onclick="closeNodeEditor()">取消</button>
+</div>
+</div>
+</div>
+<!-- Schema Browser Overlay (Hidden by default) -->
+<div class="absolute inset-0 z-30 hidden flex items-center justify-center p-12 bg-slate-900/10 backdrop-blur-sm" id="schemaBrowser">
+<div class="w-full max-w-4xl max-h-[80vh] glass-panel rounded-2xl shadow-2xl border border-blue-200 flex flex-col overflow-hidden bg-white">
+<div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+<div class="flex items-center gap-3">
+<span class="iconify text-2xl text-blue-600" data-icon="material-symbols:schema-outline"></span>
+<div>
+<h3 class="text-sm font-bold text-slate-800">全域数据源表结构浏览器</h3>
+<p class="text-[10px] text-slate-500">连接状态：已打通 ERP / MES / PLM 业务中台</p>
+</div>
+</div>
+<button class="p-1 hover:bg-slate-200 rounded-lg transition-colors" onclick="closeSchemaBrowser()">
+<span class="iconify text-xl text-slate-400" data-icon="material-symbols:close"></span>
+</button>
+</div>
+<div class="flex-1 flex overflow-hidden">
+<!-- Sidebar: Systems -->
+<div class="w-48 border-r border-slate-100 p-3 space-y-2 bg-slate-50/50">
+<button class="schema-tab-btn active w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all hover:bg-blue-600/10 text-slate-500" onclick="switchSchemaSystem('PLM')">
+<span class="iconify" data-icon="material-symbols:settings-input-component"></span> PLM 系统
+                </button>
+<button class="schema-tab-btn w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all hover:bg-blue-600/10 text-slate-500" onclick="switchSchemaSystem('MES')">
+<span class="iconify" data-icon="material-symbols:factory"></span> MES 系统
+                </button>
+<button class="schema-tab-btn w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all hover:bg-blue-600/10 text-slate-500" onclick="switchSchemaSystem('ERP')">
+<span class="iconify" data-icon="material-symbols:analytics"></span> ERP 系统
+                </button>
+</div>
+<!-- Content: Tables -->
+<div class="flex-1 p-6 overflow-y-auto custom-scrollbar bg-white" id="schemaTableContent">
+<!-- Dynamic Content Here -->
+<div class="flex items-center justify-center h-full text-slate-400 text-sm animate-pulse">
+                    正在索引表映射关系...
+                </div>
+</div>
+</div>
+<div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center text-[11px]">
+<span class="text-slate-500 font-medium">检测到 142 个关联实体，建议优先同步「物料清单」模块</span>
+<button class="px-4 py-1.5 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-shadow shadow-md">
+                同步至识别引擎
+            </button>
+</div>
+</div>
+</div>
+<!-- Enterprise Docs Overlay (New) -->
+<div class="absolute inset-0 z-40 hidden flex items-center justify-center p-12 bg-slate-900/10 backdrop-blur-md" id="enterpriseDocsOverlay">
+<div class="w-full max-w-5xl h-[80vh] glass-panel rounded-2xl shadow-2xl border border-blue-200 flex flex-col overflow-hidden bg-white">
+<div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+<span class="iconify text-2xl text-white" data-icon="material-symbols:description"></span>
+</div>
+<div>
+<h3 class="text-lg font-bold text-slate-800">PLM 工艺参数记录文档库</h3>
+<p class="text-xs text-slate-500">当前更新：2026年03月20日 15:42:00 (自动同步 PLM 3.0 系统)</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative group">
+<input class="bg-slate-100 border border-slate-200 text-xs px-4 py-2 rounded-full w-64 focus:outline-none focus:border-blue-500 transition-all text-slate-700" placeholder="搜索工艺文档..." type="text"/>
+<span class="iconify absolute right-3 top-2 text-slate-400" data-icon="material-symbols:search"></span>
+</div>
+<button class="p-2 hover:bg-slate-200 rounded-lg transition-colors" id="closeDocsBtn">
+<span class="iconify text-2xl text-slate-400" data-icon="material-symbols:close"></span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex overflow-hidden">
+<!-- Sidebar: Document Categories -->
+<div class="w-56 border-r border-slate-100 p-4 space-y-2 bg-slate-50/50 overflow-y-auto custom-scrollbar" id="docCategoryList">
+<div class="mb-4">
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 px-2">文档分类库</p>
+<button class="doc-tab-btn active w-full text-left p-3 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-3 border border-transparent" onclick="filterDocs('ALL')">
+<span class="iconify text-lg text-blue-600" data-icon="material-symbols:category-outline"></span>
+<span class="text-xs font-semibold">全部文档</span>
+</button>
+<button class="doc-tab-btn w-full text-left p-3 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-3 border border-transparent text-slate-600" onclick="filterDocs('FLOW')">
+<span class="iconify text-lg text-orange-500" data-icon="material-symbols:route"></span>
+<span class="text-xs font-semibold">工艺流程图</span>
+</button>
+<button class="doc-tab-btn w-full text-left p-3 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-3 border border-transparent text-slate-600" onclick="filterDocs('MANUAL')">
+<span class="iconify text-lg text-yellow-600" data-icon="material-symbols:menu-book"></span>
+<span class="text-xs font-semibold">工艺手册</span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex flex-col bg-white">
+<!-- Sorting & Quick Actions -->
+<div class="px-6 py-3 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+<div class="flex items-center gap-4 text-[11px] text-slate-500">
+<span>排序方式:</span>
+<span class="text-blue-600 cursor-pointer flex items-center gap-1 font-bold">按更新日期 <span class="iconify" data-icon="material-symbols:keyboard-arrow-down"></span></span>
+<span class="cursor-pointer hover:text-blue-600">按类型</span>
+</div>
+</div>
+<div class="flex-1 p-6 overflow-y-auto custom-scrollbar" id="docsContentList">
+<!-- Cards Grid injected by JS -->
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Floating Status -->
+<div class="absolute bottom-20 left-1/2 -translate-x-1/2 glass-panel px-6 py-2 rounded-full flex items-center gap-6 z-30 shadow-lg border border-slate-200">
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">渲染精度：</span>
+<span class="text-green-600 font-bold font-mono">Ultra-HD</span>
+</div>
+<div class="w-px h-4 bg-slate-200"></div>
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">物理引擎：</span>
+<span class="text-blue-600 font-bold">Force-Directed</span>
+</div>
+<div class="w-px h-4 bg-slate-200"></div>
+<div class="flex items-center gap-2 text-xs">
+<span class="text-slate-400">筛选器：</span>
+<span class="bg-blue-600 px-2 py-0.5 rounded text-[10px] text-white">核心机理层</span>
+</div>
+</div>
+<!-- Bottom Operation Area (Light) -->
+<div class="absolute bottom-0 left-0 right-0 h-16 light-theme-section flex items-center px-6 justify-between z-30 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+<div class="flex items-center gap-10">
+<div class="flex flex-col">
+<span class="text-[10px] text-gray-400 uppercase font-bold">系统健康度</span>
+<div class="flex items-center gap-2">
+<div class="flex gap-0.5">
+<div class="w-1 h-3 bg-green-500 rounded-full"></div>
+<div class="w-1 h-3 bg-green-500 rounded-full"></div>
+<div class="w-1 h-3 bg-green-500 rounded-full"></div>
+<div class="w-1 h-3 bg-green-500 rounded-full"></div>
+<div class="w-1 h-3 bg-gray-300 rounded-full"></div>
+</div>
+<span class="text-xs font-bold text-gray-700">92%</span>
+</div>
+</div>
+<div class="flex flex-col border-l border-gray-200 pl-10">
+<span class="text-[10px] text-gray-400 uppercase font-bold">待处理任务</span>
+<span class="text-xs font-bold text-orange-600">5 个属性冲突需解决</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600">A1</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-600">B2</div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-green-100 flex items-center justify-center text-[10px] font-bold text-green-600">+3</div>
+</div>
+<button class="px-4 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black transition-all">协作历史</button>
+<button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all">提交变更</button>
+</div>
+</div>
+</section>
+<!-- Right Section: Ontology Correction -->
+<aside class="w-96 h-full bg-white border-l border-slate-200 flex flex-col z-20 shadow-xl">
+<div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+<div>
+<h2 class="text-sm font-bold flex items-center gap-2 mb-1 text-slate-800">
+<span class="iconify text-purple-600" data-icon="material-symbols:edit-note-rounded"></span>
+                    本体结构描述与修正
+                </h2>
+<p class="text-[11px] text-slate-500">选定节点或关系实时同步至后台计算集群</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-lg text-[10px] font-bold hover:bg-indigo-100 transition-all" onclick="openOntologyDataModal()">
+<span class="iconify" data-icon="material-symbols:database-outline"></span>
+        本体数据
+    </button>
+<button class="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold transition-all shadow-lg shadow-blue-200" onclick="openAddModal()">
+<span class="iconify" data-icon="material-symbols:add"></span>
+        新增
+    </button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
+<!-- Entity Edit -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">当前选中：实体</h3>
+<button class="text-[9px] text-blue-600 font-bold hover:underline" onclick="openAddModal(true)">新增子节点</button>
+</div>
+<span class="text-[10px] font-bold text-white px-2 py-0.5 rounded bg-purple-600">ID: E-20260320-01</span>
+</div>
+<div class="space-y-3">
+<div>
+<label class="text-[10px] font-semibold text-slate-600 mb-1 block">概念名称 (Concept)</label>
+<input class="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all text-slate-700" type="text" value="电力变压模块-A">
+</input></div>
+<div>
+<label class="text-[10px] font-semibold text-slate-600 mb-1 block">概念分类</label>
+<select class="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-slate-700">
+<option>核心物理设备</option>
+<option>逻辑控制单元</option>
+<option>监测传感器</option>
+<option>辅助材料</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Attributes Table -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">属性定义 (Attributes)</h3>
+<button class="text-blue-600 hover:text-blue-500 transition-colors">
+<span class="iconify" data-icon="material-symbols:add-box"></span>
+</button>
+</div>
+<div class="space-y-2">
+<div class="grid grid-cols-12 gap-2 items-center p-2 rounded bg-white border border-slate-100 shadow-sm">
+<div class="col-span-4 text-[10px] text-slate-500 font-medium">额定电流</div>
+<div class="col-span-5 text-[10px] text-blue-600 font-bold">Float / 500A</div>
+<div class="col-span-3 flex justify-end gap-2">
+<button class="text-slate-300 hover:text-blue-600 transition-colors"><span class="iconify" data-icon="material-symbols:edit"></span></button>
+<button class="text-slate-300 hover:text-red-600 transition-colors"><span class="iconify" data-icon="material-symbols:delete"></span></button>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-2 items-center p-2 rounded bg-white border border-slate-100 shadow-sm">
+<div class="col-span-4 text-[10px] text-slate-500 font-medium">最后检修日</div>
+<div class="col-span-5 text-[10px] text-blue-600 font-bold">Date / 2026-03</div>
+<div class="col-span-3 flex justify-end gap-2">
+<button class="text-slate-300 hover:text-blue-600 transition-colors"><span class="iconify" data-icon="material-symbols:edit"></span></button>
+<button class="text-slate-300 hover:text-red-600 transition-colors"><span class="iconify" data-icon="material-symbols:delete"></span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Relationships -->
+<div class="space-y-3">
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">语义化关系 (Relations)</h3>
+<div class="space-y-2">
+<div class="p-3 rounded-lg bg-white border-l-4 border-blue-500 shadow-sm border border-slate-100">
+<div class="flex items-center gap-2 mb-2 text-xs">
+<span class="text-slate-500 italic font-medium">ConnectedTo</span>
+<span class="iconify text-slate-300" data-icon="material-symbols:arrow-forward"></span>
+<span class="text-slate-800 font-bold">高压配电母线</span>
+</div>
+<div class="flex gap-2">
+<button class="text-[9px] px-2 py-1 bg-slate-50 hover:bg-slate-100 rounded transition-colors text-slate-600 border border-slate-200 uppercase font-bold">调整强度</button>
+<button class="text-[9px] px-2 py-1 bg-slate-50 hover:bg-slate-100 rounded transition-colors text-slate-600 border border-slate-200 uppercase font-bold">反向关联</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick AI Tools -->
+<div class="p-5 border-t border-slate-100 bg-slate-50/50">
+<div class="flex items-center gap-2 mb-3">
+<span class="iconify text-blue-600" data-icon="material-symbols:smart-toy"></span>
+<h3 class="text-[10px] font-bold uppercase text-slate-400">AI 辅助工具</h3>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center gap-2 p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-all border border-blue-100 shadow-sm">
+<span class="iconify" data-icon="material-symbols:auto-graph-rounded"></span>
+<span class="text-[10px] font-bold">推理新关系</span>
+</button>
+<button class="flex items-center gap-2 p-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded transition-all border border-purple-100 shadow-sm">
+<span class="iconify" data-icon="material-symbols:verified"></span>
+<span class="text-[10px] font-bold">一致性对比</span>
+</button>
+</div>
+</div>
+</aside></main>
+<!-- Global Footer -->
+<footer class="h-8 glass-panel border-t border-slate-200 px-6 flex items-center justify-between text-[10px] text-slate-500 bg-white">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                集群状态：稳定负载 (23%)
+            </span>
+<span>API 推理耗时：14ms</span>
+<span>当前本体快照：SNAP-2026.03.20.0812</span>
+</div>
+<div class="flex items-center gap-4">
+<span>© 2026 智能本体研发实验室</span>
+<div class="flex gap-2">
+<span class="iconify cursor-pointer hover:text-blue-600" data-icon="fe:github"></span>
+<span class="iconify cursor-pointer hover:text-blue-600" data-icon="fe:terminal"></span>
+</div>
+</div>
+</footer>
+<!-- 属性冲突审核弹窗 -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden" id="conflictModal">
+<div class="glass-panel w-[900px] max-h-[85vh] rounded-2xl border-red-200 overflow-hidden flex flex-col shadow-2xl bg-white">
+<!-- 头部 -->
+<div class="p-5 border-b border-slate-100 flex justify-between items-center bg-red-50">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-red-600 rounded-lg text-white shadow-lg shadow-red-200">
+<span class="iconify text-2xl" data-icon="material-symbols:warning-rounded"></span>
+</div>
+<div>
+<h3 class="text-xl font-bold text-slate-800 leading-none">属性冲突审核</h3>
+<p class="text-xs text-red-600 mt-1">系统检测到 4 个潜在的本体属性冲突，请及时处理</p>
+</div>
+</div>
+<button class="p-2 hover:bg-red-100 rounded-full text-red-400 transition-colors" id="closeConflictBtn">
+<span class="iconify text-2xl" data-icon="material-symbols:close"></span>
+</button>
+</div>
+<div class="flex-1 flex overflow-hidden">
+<!-- 左侧列表 -->
+<div class="w-1/3 border-r border-slate-100 overflow-y-auto custom-scrollbar bg-slate-50/50">
+<div class="p-2 space-y-2" id="conflictList">
+<!-- 动态载入列表项 -->
+</div>
+</div>
+<!-- 右侧详情 -->
+<div class="flex-1 p-6 overflow-y-auto custom-scrollbar bg-white" id="conflictDetail">
+<div class="h-full flex flex-col items-center justify-center text-slate-400" id="emptyDetail">
+<span class="iconify text-6xl mb-4 opacity-20" data-icon="material-symbols:info-outline"></span>
+<p>请选择左侧列表中的冲突项以查看详情</p>
+</div>
+<div class="hidden space-y-6" id="detailContent">
+<div class="grid grid-cols-2 gap-4">
+<div class="glass-panel p-4 rounded-xl border-slate-100 bg-slate-50/30">
+<label class="text-[10px] uppercase tracking-wider text-slate-400 block mb-2">原始来源</label>
+<div class="text-sm font-mono text-blue-600 bg-blue-50 p-2 rounded border border-blue-100" id="sourceVal">系统核心层 (v1.2)</div>
+</div>
+<div class="glass-panel p-4 rounded-xl border-slate-100 bg-slate-50/30">
+<label class="text-[10px] uppercase tracking-wider text-slate-400 block mb-2">当前冲突值</label>
+<div class="text-sm font-mono text-red-600 bg-red-50 p-2 rounded border border-red-100" id="currentVal">String (MaxLength: 255)</div>
+</div>
+</div>
+<div>
+<label class="text-sm font-medium text-slate-700 block mb-3">建议修正方案</label>
+<div class="bg-green-50 border border-green-200 p-4 rounded-xl">
+<p class="text-sm text-green-700" id="suggestText">
+                                    建议将类型统一升级为 Text 类型，并同步下游数据库映射关系。
+                                </p>
+</div>
+</div> </div>
+<div class="space-y-3">
+<label class="text-sm font-medium text-gray-300 block">处理决策</label>
+<textarea class="w-full bg-gray-950 border border-gray-800 rounded-xl p-3 text-sm focus:border-blue-500 outline-none h-24" id="auditRemark" placeholder="输入审核意见..."></textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- 底部操作 -->
+<div class="p-4 border-t border-gray-800 bg-gray-950/50 flex justify-between items-center">
+<div class="text-[10px] text-gray-500">最后扫描时间: 2026-03-20 14:05:22</div>
+<div class="flex gap-3">
+<button class="px-5 py-2 rounded-lg bg-gray-800 text-gray-300 text-sm hover:bg-gray-700 transition-all font-medium" onclick="handleAudit('reject')">驳回</button>
+<button class="px-5 py-2 rounded-lg bg-yellow-600/20 text-yellow-500 text-sm border border-yellow-600/30 hover:bg-yellow-600/30 transition-all font-medium" onclick="handleAudit('pending')">标记待处理</button>
+<button class="px-8 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-500 transition-all font-bold shadow-lg shadow-blue-600/20" onclick="handleAudit('approve')">通过并应用</button>
+</div>
+</div>
+</div>
+
+<!-- 系统通知 -->
+<div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full bg-blue-600 text-white font-medium shadow-2xl hidden animate-bounce" id="toast">
+        操作成功已更新
+    </div>
+<!-- Ontology Concept Modal -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" id="ontologyModal">
+<div class="fixed inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity" onclick="closeAddModal()"></div>
+<div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200">
+<div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-blue-100/50 rounded-xl flex items-center justify-center">
+<span class="iconify text-2xl text-blue-600" data-icon="material-symbols:add-home-rounded" id="modalIcon"></span>
+</div>
+<div>
+<h4 class="text-sm font-bold text-slate-800 tracking-tight" id="modalTitle">新增本体概念</h4>
+<p class="text-[10px] text-slate-500 uppercase tracking-widest leading-none" id="modalSubtitle">Create a new ontology node</p>
+</div>
+</div>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-slate-200 rounded-full transition-colors" onclick="closeAddModal()">
+<span class="iconify text-slate-400" data-icon="material-symbols:close"></span>
+</button>
+</div>
+<div class="p-6 space-y-5 custom-scrollbar max-h-[70vh] overflow-y-auto">
+<!-- Concept Name -->
+<div class="space-y-1.5">
+<label class="text-[11px] font-bold text-slate-500 uppercase">概念名称</label>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400" id="nodeName" placeholder="输入概念名称..." type="text"/>
+</div>
+<!-- Parent Concept -->
+<div class="space-y-1.5">
+<label class="text-[11px] font-bold text-slate-500 uppercase">父类节点</label>
+<select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" id="parentSelect">
+<option value="">-- 无 (顶级节点) --</option>
+</select>
+</div>
+<!-- Attributes Section -->
+<div class="space-y-3">
+<div class="flex items-center justify-between border-b border-slate-100 pb-1.5">
+<label class="text-[11px] font-bold text-slate-500 uppercase">属性定义</label>
+<button class="text-blue-600 hover:text-blue-700 text-[10px] font-bold flex items-center gap-1" onclick="addAttributeRow()">
+<span class="iconify" data-icon="material-symbols:add-circle"></span> 添加属性
+                        </button>
+</div>
+<div class="space-y-2" id="attributeList">
+<!-- Dynamic Row -->
+</div>
+</div>
+<!-- Relationships Section -->
+<div class="space-y-3 pt-2">
+<div class="flex items-center justify-between border-b border-slate-100 pb-1.5">
+<label class="text-[11px] font-bold text-slate-500 uppercase">关联关系</label>
+<button class="text-indigo-600 hover:text-indigo-700 text-[10px] font-bold flex items-center gap-1" onclick="addRelationRow()">
+<span class="iconify" data-icon="material-symbols:add-circle"></span> 添加关系
+                        </button>
+</div>
+<div class="space-y-2" id="relationList">
+<!-- Dynamic Row -->
+</div>
+</div>
+</div>
+<div class="p-4 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-3">
+<button class="w-full py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-200 rounded-xl text-xs font-bold transition-all uppercase tracking-widest" onclick="closeAddModal()">
+                    取消
+                </button>
+<button class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-200 uppercase tracking-widest" onclick="saveNewConcept()">
+                    保存并同步
+                </button>
+</div>
+</div>
+</div>
+<script>
+        // 属性冲突模拟数据
+        const conflictData = [
+            {
+                id: 1,
+                name: "max_torque",
+                type: "命名冲突",
+                desc: "存在同名属性，但单位标识不一致 (Nm vs lb-ft)",
+                level: "高级",
+                source: "动力系统 (Layer-2)",
+                current: "Integer, Unit: lb-ft",
+                suggest: "建议统一使用 Nm, 并设置自动转换器。"
+            },
+            {
+                id: 2,
+                name: "machine_serial",
+                type: "类型冲突",
+                desc: "物理层使用了 String，而中间件层定义为 Long",
+                level: "中级",
+                source: "制造层 (Layer-3)",
+                current: "String (Hex Code)",
+                suggest: "同步物理层类型，增加 RegEx 匹配逻辑。"
+            },
+            {
+                id: 3,
+                name: "sensor_range",
+                type: "值域冲突",
+                desc: "定义范围 [0, 100]，实时获取到 [-10, 120]",
+                level: "紧急",
+                source: "实时数采 (Layer-5)",
+                current: "Range [-10, 120]",
+                suggest: "触发阈值告警，并更新本体动态约束条件。"
+            },
+            {
+                id: 4,
+                name: "firmware_ver",
+                type: "版本冲突",
+                desc: "多设备本体共享此属性，但版本标识符格式不同",
+                level: "低级",
+                source: "固件管理 (Layer-1)",
+                current: "v2.0.1 (Patch)",
+                suggest: "建议合并为 SemVer 格式对齐。"
+            }
+        ];
+
+        let selectedConflictId = null;
+
+        const conflictModal = document.getElementById('conflictModal');
+        const conflictList = document.getElementById('conflictList');
+        const emptyDetail = document.getElementById('emptyDetail');
+        const detailContent = document.getElementById('detailContent');
+        const sourceVal = document.getElementById('sourceVal');
+        const currentVal = document.getElementById('currentVal');
+        const suggestText = document.getElementById('suggestText');
+        const toast = document.getElementById('toast');
+
+        // 显示冲突弹窗
+        function showConflictModal() {
+            renderConflictList();
+            conflictModal.classList.remove('hidden');
+        }
+
+        // 隐藏冲突弹窗
+        document.getElementById('closeConflictBtn').onclick = () => {
+            conflictModal.classList.add('hidden');
+        };
+
+        // 渲染列表
+        function renderConflictList() {
+            conflictList.innerHTML = conflictData.map(c => {
+                let levelColor = 'bg-blue-600';
+                if(c.level === '高级') levelColor = 'bg-orange-500';
+                if(c.level === '紧急') levelColor = 'bg-red-500';
+                if(c.level === '低级') levelColor = 'bg-slate-400';
+
+                return `
+                    <div onclick="selectConflict(${c.id})" class="p-4 rounded-xl cursor-pointer transition-all border border-transparent ${selectedConflictId === c.id ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-100'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-blue-600 font-mono">${c.name}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] text-white shadow-sm ${levelColor}">${c.level}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-relaxed">${c.desc}</p>
+                        <div class="mt-2 text-[10px] text-slate-400 flex items-center gap-1">
+                            <span class="iconify" data-icon="material-symbols:category"></span>
+                            ${c.type}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 选择冲突项
+        function selectConflict(id) {
+            selectedConflictId = id;
+            const item = conflictData.find(c => c.id === id);
+            if(item) {
+                emptyDetail.classList.add('hidden');
+                detailContent.classList.remove('hidden');
+                sourceVal.innerText = item.source;
+                currentVal.innerText = item.current;
+                suggestText.innerText = item.suggest;
+                renderConflictList();
+            }
+        }
+
+        // 处理审核
+        function handleAudit(action) {
+            if(!selectedConflictId) {
+                alert('请先选择一个冲突项进行操作');
+                return;
+            }
+            
+            const actionText = action === 'approve' ? '已应用修复方案' : (action === 'reject' ? '已驳回修正' : '已标记为待处理');
+            toast.innerText = `成功：${actionText}`;
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                // 模拟移除已处理项
+                const idx = conflictData.findIndex(c => c.id === selectedConflictId);
+                if(idx > -1) conflictData.splice(idx, 1);
+                selectedConflictId = null;
+                detailContent.classList.add('hidden');
+                emptyDetail.classList.remove('hidden');
+                renderConflictList();
+                
+                if(conflictData.length === 0) {
+                    setTimeout(() => conflictModal.classList.add('hidden'), 500);
+                }
+            }, 1000);
+        }
+
+        // 在页面右下角添加一个浮动按钮用于触发演示
+        const triggerBtn = document.createElement('button');
+        triggerBtn.className = "fixed bottom-6 right-6 p-4 bg-red-600 hover:bg-red-500 text-white rounded-full shadow-2xl z-50 transition-transform hover:scale-110 flex items-center justify-center";
+        triggerBtn.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:warning-rounded"></span>';
+        triggerBtn.onclick = showConflictModal;
+        document.body.appendChild(triggerBtn);
+
+        // --- Ontology Concept Addition Logic (2026-03-20) ---
+        function openAddModal(isChild = false) {
+            const ontologyModal = document.getElementById('ontologyModal');
+            const nodeNameInput = document.getElementById('nodeName');
+            const parentSelect = document.getElementById('parentSelect');
+            const attributeList = document.getElementById('attributeList');
+            const relationList = document.getElementById('relationList');
+            
+            // Reset modal data
+            nodeNameInput.value = '';
+            attributeList.innerHTML = '';
+            relationList.innerHTML = '';
+            
+            // Populate parent select
+            parentSelect.innerHTML = '<option value="">-- 无 (顶级节点) --</option>';
+            nodes.forEach((node, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.innerText = node.label;
+                parentSelect.appendChild(opt);
+            });
+
+            if (isChild) {
+                if (nodes.length > 0) parentSelect.value = "0"; 
+                document.getElementById('modalTitle').innerText = '新增子节点概念';
+                document.getElementById('modalSubtitle').innerText = 'Create a subordinate ontology node';
+                document.getElementById('modalIcon').dataset.icon = 'material-symbols:account-tree';
+            } else {
+                document.getElementById('modalTitle').innerText = '新增本体概念';
+                document.getElementById('modalSubtitle').innerText = 'Create a new ontology node';
+                document.getElementById('modalIcon').dataset.icon = 'material-symbols:add-home-rounded';
+            }
+
+            ontologyModal.classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('ontologyModal').classList.add('hidden');
+        }
+
+        function addAttributeRow() {
+            const attributeList = document.getElementById('attributeList');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-10 gap-2 items-center mb-2';
+            row.innerHTML = `
+                <div class="col-span-4"><input type="text" placeholder="属性名" class="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-[10px] outline-none text-slate-700"></div>
+                <div class="col-span-1 text-center text-[10px] text-slate-400">→</div>
+                <div class="col-span-4"><input type="text" placeholder="默认值" class="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-[10px] outline-none text-slate-700"></div>
+                <button onclick="this.parentElement.remove()" class="col-span-1 text-red-500 hover:text-red-600 flex justify-center"><span class="iconify" data-icon="material-symbols:delete"></span></button>
+            `;
+            attributeList.appendChild(row);
+        }
+
+        function addRelationRow() {
+            const relationList = document.getElementById('relationList');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-10 gap-2 items-center mb-2';
+            let options = nodes.map((n, i) => `<option value="${i}">${n.label}</option>`).join('');
+            row.innerHTML = `
+                <div class="col-span-4"><input type="text" placeholder="关系语义" class="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-[10px] outline-none text-slate-700"></div>
+                <div class="col-span-5"><select class="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-[10px] outline-none text-slate-700"><option value="">目标节点...</option>${options}</select></div>
+                <button onclick="this.parentElement.remove()" class="col-span-1 text-red-500 hover:text-red-600 flex justify-center"><span class="iconify" data-icon="material-symbols:delete"></span></button>
+            `;
+            relationList.appendChild(row);
+        }
+
+        function saveNewConcept() {
+            const nameInput = document.getElementById('nodeName');
+            const name = nameInput.value.trim();
+            const parentIdx = document.getElementById('parentSelect').value;
+            
+            if (!name) {
+                nameInput.classList.add('border-red-500');
+                setTimeout(() => nameInput.classList.remove('border-red-500'), 2000);
+                return;
+            }
+
+            const newNode = {
+                x: width / 2 + (Math.random() - 0.5) * 100,
+                y: height / 2 + (Math.random() - 0.5) * 100,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                radius: 10,
+                color: '#6366f1',
+                label: name
+            };
+
+            nodes.push(newNode);
+
+            if (parentIdx !== "") {
+                links.push({
+                    source: nodes[parentIdx],
+                    target: newNode
+                });
+            }
+
+            closeAddModal();
+            if (typeof refreshKnowledgeGraph === 'function') {
+                refreshKnowledgeGraph();
+            }
+            console.log(`[LOG] 2026-03-20: Concept "${name}" added to ontology repository.`);
+        }
+
+        // Knowledge Graph Canvas Visualizer
+        const canvas = document.getElementById('ontologyCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.parentElement.offsetWidth;
+            height = canvas.parentElement.offsetHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Node structure
+        let nodes = [];
+        let links = [];
+        let selectedNode = null;
+        let hoverNode = null;
+
+        const plmOntologyTypes = [
+            { type: '工艺参数', color: '#3b82f6' },
+            { type: '设备参数', color: '#10b981' },
+            { type: '质量标准', color: '#f59e0b' },
+            { type: '工序节点', color: '#8b5cf6' },
+            { type: '工艺步骤', color: '#ec4899' }
+        ];
+
+        const plmLabels = [
+            '淬火温度', '压力阈值', '转速设定', '冷却时间', 
+            '高压铸造机', '机器人臂', 'CNC加工中心', '送料机',
+            '抗拉强度', '硬度范围', '表面光洁度', '尺寸偏差',
+            '预处理', '熔炼', '压铸成型', '切削去毛刺',
+            '加热保温', '分段加压', '开模顶出', '在线检测'
+        ];
+
+        // Generate mockup data
+        for (let i = 0; i < plmLabels.length; i++) {
+            const typeInfo = plmOntologyTypes[i % plmOntologyTypes.length];
+            nodes.push({
+                id: i,
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                radius: 10,
+                color: typeInfo.color,
+                label: plmLabels[i],
+                category: typeInfo.type,
+                attributes: [
+                    { name: '阈值范围', value: '800-1200' },
+                    { name: '校验等级', value: 'A级' }
+                ],
+                relations: [
+                    { target: '质量管控', type: '约束于' }
+                ]
+            });
+        }
+
+        // Generate some links
+        const relationTypes = ['父子关系', '关联关系', '依赖关系', '包含关系'];
+        const startTime = new Date('2026-01-01').getTime();
+        const endTime = new Date('2026-03-20').getTime();
+
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                if (Math.random() > 0.85) {
+                    links.push({ 
+                        source: nodes[i], 
+                        target: nodes[j],
+                        type: relationTypes[Math.floor(Math.random() * relationTypes.length)],
+                        value: Math.random().toFixed(2),
+                        timestamp: new Date(startTime + Math.random() * (endTime - startTime)),
+                        visible: true
+                    });
+                }
+            }
+        }
+
+        function toggleRelationFilter() {
+            const panel = document.getElementById('relationFilterPanel');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
+        }
+
+        function resetFilters() {
+            // Reset UI
+            document.querySelectorAll('#filter-relation-types input').forEach(cb => cb.checked = true);
+            document.getElementById('filter-weight').value = 0;
+            document.getElementById('weight-value').innerText = '0.0';
+            document.getElementById('filter-node-type').value = 'all';
+            document.getElementById('filter-date-start').value = '2026-01-01';
+            document.getElementById('filter-date-end').value = '2026-03-20';
+            
+            // Reset visibility
+            links.forEach(link => link.visible = true);
+            console.log("Filters reset. Total links: " + links.length);
+        }
+
+        function applyFilters() {
+            const selectedTypes = Array.from(document.querySelectorAll('#filter-relation-types input:checked')).map(cb => cb.value);
+            const minWeight = parseFloat(document.getElementById('filter-weight').value);
+            const nodeTypeFilter = document.getElementById('filter-node-type').value;
+            const startDate = new Date(document.getElementById('filter-date-start').value).getTime();
+            const endDate = new Date(document.getElementById('filter-date-end').value).getTime();
+
+            let visibleCount = 0;
+            links.forEach(link => {
+                const typeMatch = selectedTypes.includes(link.type);
+                const weightMatch = parseFloat(link.value) >= minWeight;
+                const nodeTypeMatch = nodeTypeFilter === 'all' || 
+                                    link.source.category === nodeTypeFilter || 
+                                    link.target.category === nodeTypeFilter;
+                const dateMatch = link.timestamp.getTime() >= startDate && link.timestamp.getTime() <= endDate;
+
+                link.visible = typeMatch && weightMatch && nodeTypeMatch && dateMatch;
+                if (link.visible) visibleCount++;
+            });
+
+            console.log(`Applied filters. Visible links: ${visibleCount}/${links.length}`);
+            // Notification or visual feedback
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="iconify animate-spin" data-icon="material-symbols:refresh"></span> 应用中...';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                toggleRelationFilter();
+            }, 400);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Links
+            links.forEach(link => {
+                if (link.visible === false) return;
+                
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 0.6;
+                ctx.beginPath();
+                ctx.moveTo(link.source.x, link.source.y);
+                ctx.lineTo(link.target.x, link.target.y);
+                ctx.stroke();
+
+                // Small arrow moving on line
+                const time = Date.now() * 0.001;
+                const pos = (time % 2) / 2;
+                const ax = link.source.x + (link.target.x - link.source.x) * pos;
+                const ay = link.source.y + (link.target.y - link.source.y) * pos;
+                ctx.fillStyle = '#94a3b8';
+                ctx.beginPath();
+                ctx.arc(ax, ay, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Nodes
+            nodes.forEach((node, i) => {
+                const isSelected = selectedNode && selectedNode.id === node.id;
+                const isHovered = hoverNode && hoverNode.id === node.id;
+
+                // Shadow/Glow effect
+                if (isSelected || isHovered) {
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = node.color;
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = '#fff';
+                } else {
+                    ctx.shadowBlur = 0;
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#ffffffaa';
+                }
+
+                ctx.fillStyle = node.color;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, isSelected ? 15 : node.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = isSelected ? '#475569' : '#94a3b8';
+                ctx.font = isSelected ? 'bold 12px Inter' : '500 11px Inter';
+                ctx.fillText(node.label, node.x + 14, node.y + 4);
+
+                // Movement Logic (Slow drift)
+                node.x += node.vx;
+                node.y += node.vy;
+
+                // Boundary bounce
+                if (node.x < 20 || node.x > width - 20) node.vx *= -1;
+                if (node.y < 20 || node.y > height - 20) node.vy *= -1;
+                
+                // Keep movement slow
+                node.vx += (Math.random() - 0.5) * 0.01;
+                node.vy += (Math.random() - 0.5) * 0.01;
+                const speedScale = 0.5;
+                if(Math.abs(node.vx) > speedScale) node.vx *= 0.9;
+                if(Math.abs(node.vy) > speedScale) node.vy *= 0.9;
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+
+        // Canvas Handlers
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            hoverNode = nodes.find(node => {
+                const dist = Math.sqrt((node.x - mouseX)**2 + (node.y - mouseY)**2);
+                return dist < 15;
+            });
+            canvas.style.cursor = hoverNode ? 'pointer' : 'move';
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const clickedNode = nodes.find(node => {
+                const dist = Math.sqrt((node.x - mouseX)**2 + (node.y - mouseY)**2);
+                return dist < 15;
+            });
+
+            if (clickedNode) {
+                openNodeEditor(clickedNode);
+            } else {
+                closeNodeEditor();
+            }
+        });
+
+        // Editor Logic
+        const nodeEditorPanel = document.getElementById('nodeEditorPanel');
+        const editNodeLabel = document.getElementById('editNodeLabel');
+        const editNodeCategory = document.getElementById('editNodeCategory');
+        const nodeAttributes = document.getElementById('nodeAttributes');
+        const nodeRelations = document.getElementById('nodeRelations');
+
+        function openNodeEditor(node) {
+            selectedNode = node;
+            nodeEditorPanel.classList.remove('translate-x-[calc(100%+24px)]');
+            
+            editNodeLabel.value = node.label;
+            editNodeCategory.value = node.category;
+            
+            nodeAttributes.innerHTML = node.attributes.map(attr => `
+                <div class="flex items-center gap-2">
+                    <input type="text" value="${attr.name}" class="w-1/2 p-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-500">
+                    <input type="text" value="${attr.value}" class="w-1/2 p-1.5 bg-slate-100 border border-slate-200 rounded text-[11px] text-slate-800">
+                </div>
+            `).join('');
+
+            nodeRelations.innerHTML = node.relations.map(rel => `
+                <div class="flex items-center justify-between p-2 bg-blue-50/50 rounded-lg border border-blue-100">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] text-blue-400 font-bold uppercase tracking-tighter">${rel.type}</span>
+                        <span class="text-xs text-slate-700 font-medium">${rel.target}</span>
+                    </div>
+                    <button class="p-1 text-slate-300 hover:text-red-500 transition-colors">
+                        <span class="iconify" data-icon="material-symbols:link-off"></span>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function closeNodeEditor() {
+            selectedNode = null;
+            nodeEditorPanel.classList.add('translate-x-[calc(100%+24px)]');
+        }
+
+        function saveNodeEdit() {
+            if (selectedNode) {
+                selectedNode.label = editNodeLabel.value;
+                selectedNode.category = editNodeCategory.value;
+                
+                // Find matching color for category
+                const catInfo = plmOntologyTypes.find(t => t.type === selectedNode.category);
+                if (catInfo) selectedNode.color = catInfo.color;
+                
+                closeNodeEditor();
+                // Simple feedback toast could be added here
+            }
+        }
+
+        // Mock Progress Logic
+        const progressEl = document.querySelector('.bg-blue-500.h-full');
+        const progressText = document.querySelector('.text-blue-400.font-mono');
+        let progress = 78;
+        setInterval(() => {
+            if (progress < 99) {
+                progress += Math.random() * 0.2;
+                progressEl.style.width = `${progress}%`;
+                progressText.innerText = `${Math.floor(progress)}%`;
+            }
+        }, 3000);
+
+        // Schema Browser Logic
+        const schemaBrowser = document.getElementById('schemaBrowser');
+        const sqlServerBtn = document.getElementById('sqlServerBtn');
+        const oracleBtn = document.getElementById('oracleBtn');
+        const mysqlBtn = document.getElementById('mysqlBtn');
+        const postgresBtn = document.getElementById('postgresBtn');
+        const mongodbBtn = document.getElementById('mongodbBtn');
+        const redisBtn = document.getElementById('redisBtn');
+        const schemaTableContent = document.getElementById('schemaTableContent');
+
+        const dbButtons = [sqlServerBtn, oracleBtn, mysqlBtn, postgresBtn, mongodbBtn, redisBtn];
+        dbButtons.forEach(btn => {
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    schemaBrowser.classList.remove('hidden');
+                    renderSchema('PLM');
+                });
+            }
+        });
+
+        function closeSchemaBrowser() {
+            schemaBrowser.classList.add('hidden');
+        }
+
+        function switchSchemaSystem(sys) {
+            document.querySelectorAll('.schema-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(sys));
+            });
+            renderSchema(sys);
+        }
+
+        function renderSchema(sys) {
+            const data = schemaData[sys];
+            schemaTableContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${data.map(table => `
+                        <div class="p-4 rounded-xl border border-gray-700 bg-gray-800/30 hover:border-blue-500/50 transition-all group">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-blue-100">${table.name}</span>
+                                <span class="text-[10px] text-gray-500">${table.desc}</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${table.columns.map(col => `
+                                    <span class="px-1.5 py-0.5 rounded bg-gray-900 text-[9px] text-gray-400 font-mono border border-gray-800 group-hover:border-blue-900 transition-colors">
+                                        ${col}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Enterprise Docs Logic
+        const enterpriseDocsBtn = document.getElementById('enterpriseDocsBtn');
+        const enterpriseDocsOverlay = document.getElementById('enterpriseDocsOverlay');
+        const closeDocsBtn = document.getElementById('closeDocsBtn');
+        const docsContentList = document.getElementById('docsContentList');
+
+        const docsData = [
+            { id: 1, title: '高压铸造工艺流程图_v2.1', type: 'FLOW', updated: '2026-03-19', size: '4.2MB', status: '已校验', icon: 'material-symbols:route' },
+            { id: 2, title: '铝合金热处理参数手册-2026Q1', type: 'MANUAL', updated: '2026-03-15', size: '12.8MB', status: '机密', icon: 'material-symbols:menu-book' },
+            { id: 3, title: '表面喷涂质量控制标准', type: 'QUALITY', updated: '2026-03-20', size: '3.1MB', status: '最新', icon: 'material-symbols:verified-user' },
+            { id: 4, title: 'KUKA-KR210 机器人操作规范', type: 'OPERATE', updated: '2026-02-28', size: '24.5MB', status: '外发', icon: 'material-symbols:precision-manufacturing' },
+            { id: 5, title: '精密模具结构设计规范', type: 'MANUAL', updated: '2026-03-10', size: '8.4MB', status: '受控', icon: 'material-symbols:menu-book' },
+            { id: 6, title: '总装线生产节拍优化流程图', type: 'FLOW', updated: '2026-03-18', size: '1.5MB', status: '草案', icon: 'material-symbols:route' },
+            { id: 7, title: '激光焊接熔池在线监测规程', type: 'QUALITY', updated: '2026-03-12', size: '5.9MB', status: '修订中', icon: 'material-symbols:verified-user' },
+            { id: 8, title: '西门子 S7-1500 PLC 维护指南', type: 'OPERATE', updated: '2026-01-22', size: '18.2MB', status: '正式', icon: 'material-symbols:precision-manufacturing' }
+        ];
+
+        enterpriseDocsBtn.addEventListener('click', () => {
+            enterpriseDocsOverlay.classList.remove('hidden');
+            renderDocs('ALL');
+        });
+
+        closeDocsBtn.addEventListener('click', () => {
+            enterpriseDocsOverlay.classList.add('hidden');
+        });
+
+        function filterDocs(type) {
+            document.querySelectorAll('.doc-tab-btn').forEach(btn => {
+                const isMatch = btn.getAttribute('onclick').includes(`'${type}'`);
+                btn.classList.toggle('active', isMatch);
+                btn.classList.toggle('text-gray-400', !isMatch);
+            });
+            renderDocs(type);
+        }
+
+        function renderDocs(filterType) {
+            const filtered = filterType === 'ALL' ? docsData : docsData.filter(d => d.type === filterType);
+            
+            docsContentList.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${filtered.map(doc => `
+                        <div class="bg-white border border-slate-100 rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                                    <span class="iconify text-3xl" data-icon="${doc.icon}"></span>
+                                </div>
+                                <span class="text-[10px] px-2 py-0.5 rounded border border-slate-100 bg-slate-50 text-slate-500">${doc.status}</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors truncate">${doc.title}</h4>
+                            <div class="flex items-center gap-3 text-[11px] text-slate-400">
+                                <span class="flex items-center gap-1"><span class="iconify" data-icon="material-symbols:calendar-today-outline"></span> ${doc.updated}</span>
+                                <span class="flex items-center gap-1"><span class="iconify" data-icon="material-symbols:data-usage"></span> ${doc.size}</span>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button class="text-[10px] text-blue-600 font-bold hover:underline">预览文档</button>
+                                <button class="text-[10px] text-slate-400 hover:text-blue-600 flex items-center gap-1"><span class="iconify" data-icon="material-symbols:download"></span> 下载</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // --- New Interaction Logic for Meetings, Images, and Voice ---
+        const meetingNotesBtn = document.getElementById('meetingNotesBtn');
+        const inspectionImagesBtn = document.getElementById('inspectionImagesBtn');
+        const voiceMemosBtn = document.getElementById('voiceMemosBtn');
+        const timeSeriesBtn = document.getElementById('timeSeriesBtn');
+
+        // Create Modal Elements Dynamically if not exists
+        if (!document.getElementById('commonModalOverlay')) {
+            const modalHTML = `
+                <div id="commonModalOverlay" class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-12 overflow-hidden">
+                    <div class="glass-panel w-full max-w-5xl h-[80vh] rounded-2xl flex flex-col overflow-hidden border-white/50 shadow-2xl bg-white/90">
+                        <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-white/50">
+                            <div class="flex items-center gap-4">
+                                <div id="modalHeaderIcon" class="p-2 bg-blue-600 rounded-lg text-white">
+                                    <span class="iconify text-2xl" data-icon="material-symbols:info-outline"></span>
+                                </div>
+                                <div>
+                                    <h3 id="modalTitle" class="text-lg font-bold text-slate-800"></h3>
+                                    <p id="modalSubtitle" class="text-[10px] text-slate-400 font-medium">智能体协同处理中 | 2026-03-20</p>
+                                </div>
+                            </div>
+                            <button id="closeCommonModalBtn" class="p-2 hover:bg-slate-100 rounded-full transition-all text-slate-400 hover:text-slate-600">
+                                <span class="iconify text-2xl" data-icon="material-symbols:close"></span>
+                            </button>
+                        </div>
+                        <div id="commonModalContent" class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-50/30 text-slate-800"></div>
+                        <div id="modalFooter" class="p-4 border-t border-slate-100 bg-white/50 hidden flex justify-end gap-3">
+                            <button id="modalActionBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-all flex items-center gap-2">
+                                <span class="iconify" data-icon="material-symbols:check-circle"></span>
+                                确认应用
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        const commonOverlay = document.getElementById('commonModalOverlay');
+        const commonContent = document.getElementById('commonModalContent');
+        const closeCommonBtn = document.getElementById('closeCommonModalBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalHeaderIcon = document.getElementById('modalHeaderIcon');
+        const defaultCommonModalFrameClass = "glass-panel w-full max-w-5xl h-[80vh] rounded-2xl flex flex-col overflow-hidden border-white/50 shadow-2xl bg-white/90";
+
+        function resetCommonModalShell() {
+            const modalFrame = commonOverlay.querySelector('.glass-panel');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+
+            if (ontologyDataResizeHandler) {
+                window.removeEventListener('resize', ontologyDataResizeHandler);
+                ontologyDataResizeHandler = null;
+            }
+
+            if (modalFrame) {
+                modalFrame.className = defaultCommonModalFrameClass;
+            }
+
+            if (modalSubtitle) {
+                modalSubtitle.innerText = '智能体协同处理中 | 2026-03-20';
+            }
+        }
+
+        closeCommonBtn.onclick = () => {
+            resetCommonModalShell();
+            commonOverlay.classList.add('hidden');
+        };
+
+        // 0. Time Series Logic (New)
+        timeSeriesBtn.addEventListener('click', () => {
+            modalTitle.innerText = "生产设备 PLM 时序数据本体提取";
+            modalHeaderIcon.className = "p-2 bg-indigo-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:timeline"></span>';
+
+            const devices = [
+                { id: "HSR-TRAIN-001", name: "复兴号智能动车组 (CR400AF)", type: "高铁", status: "运行中", signals: ["牵引变频器频率", "受电弓压力", "轴承温度", "转向架振动"], ontology: { class: "高速度级电动车组", properties: ["最高营运速度", "定员", "轴重"] } },
+                { id: "SUBWAY-LINE1-05", name: "地铁1号线 - 宽体客车 (Type A)", type: "地铁", status: "维护中", signals: ["车门开闭压力", "空压机负载", "牵引电流", "制动气缸压力"], ontology: { class: "城市轨道车辆", properties: ["编组形式", "供电电压", "再生制动效率"] } },
+                { id: "HSR-SIGNAL-BOX-A", name: "高铁道岔信号控制箱", type: "信号", status: "在线", signals: ["电压偏差", "绝缘电阻", "动作时间", "锁闭力"], ontology: { class: "铁路信号设备", properties: ["IP防护等级", "工作电压", "响应时延"] } }
+            ];
+
+            commonContent.innerHTML = `
+                <div class="grid grid-cols-1 gap-6">
+                    ${devices.map(dev => `
+                        <div class="p-6 rounded-2xl bg-slate-800/80 border border-slate-700 hover:border-indigo-500 transition-all">
+                            <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 bg-indigo-600/20 rounded-xl flex items-center justify-center text-indigo-400">
+                                        <span class="iconify text-3xl" data-icon="${dev.type === '高铁' ? 'material-symbols:train' : 'material-symbols:subway'}"></span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-white">${dev.name}</h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="px-2 py-0.5 rounded text-[10px] bg-slate-700 text-slate-300 font-mono italic">${dev.id}</span>
+                                            <span class="px-2 py-0.5 rounded text-[10px] ${dev.status==='运行中'?'bg-emerald-500/20 text-emerald-400':'bg-amber-500/20 text-amber-400'}">${dev.status}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">所属分类 (Ontology Class)</span>
+                                    <span class="text-indigo-400 font-bold border-b border-indigo-500/30 font-sans">${dev.ontology.class}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-3">
+                                    <label class="text-xs font-bold text-slate-400 flex items-center gap-2">
+                                        <span class="iconify text-blue-500" data-icon="material-symbols:sensors"></span> 实时信号源 (信号提取层)
+                                    </label>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${dev.signals.map(s => `<span class="px-2 py-1 bg-slate-900 border border-slate-700 text-slate-400 text-xs rounded hover:text-indigo-300 hover:border-indigo-900 cursor-default transition-all font-mono">${s}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="space-y-3 p-4 bg-indigo-900/20 rounded-xl border border-indigo-500/20">
+                                    <label class="text-xs font-bold text-indigo-300 flex items-center gap-2">
+                                        <span class="iconify" data-icon="material-symbols:schema"></span> 本体属性定义 (Entity Properties)
+                                    </label>
+                                    <ul class="grid grid-cols-2 gap-y-1">
+                                        ${dev.ontology.properties.map(p => `
+                                            <li class="flex items-center gap-2 text-xs text-slate-300">
+                                                <span class="w-1 h-1 bg-indigo-500 rounded-full"></span>
+                                                ${p}
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            commonOverlay.classList.remove('hidden');
+        });
+        // 1. Meeting Notes Logic
+        meetingNotesBtn.addEventListener('click', () => {
+            modalTitle.innerText = "企业内部 PLM 相关会议记录";
+            modalHeaderIcon.className = "p-2 bg-purple-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:groups"></span>';
+            
+            const meetings = [
+                { theme: "PLM V4.0 系统架构评审会", people: "张工, 李经理, AI架构师", time: "2026-03-18 14:00", summary: "确定了以智能体驱动的本体提取流程，将 SQL 兼容性提高至 99%。" },
+                { theme: "Q1 设备巡检本体同步协调会", people: "运维组, 数字化中心", time: "2026-03-15 10:30", summary: "讨论了巡检图片中非结构化数据的语义识别误差补正方案。" },
+                { theme: "知识图谱实时渲染优化方案", people: "前端团队, 图数据库专家", time: "2026-03-12 16:00", summary: "决定采用 Force-Directed 物理引擎 2.0 版本，支持 5w+ 节点流畅显示。" },
+                { theme: "数据安全与本体多租户隔离", people: "安全部, 管理员01", time: "2026-03-10 09:00", summary: "定义了不同等级实体的访问权限标签，确保核心机理数据不外泄。" }
+            ];
+
+            commonContent.innerHTML = `
+                <div class="space-y-4">
+                    ${meetings.map(m => `
+                        <div class="glass-panel border-gray-800 p-6 rounded-xl hover:bg-gray-800/40 transition-all border-l-4 border-l-purple-500">
+                            <div class="flex justify-between items-start mb-3">
+                                <h4 class="text-lg font-bold text-white">${m.theme}</h4>
+                                <span class="text-xs bg-purple-900/40 text-purple-400 px-3 py-1 rounded-full border border-purple-500/30">${m.time}</span>
+                            </div>
+                            <div class="flex items-center gap-2 mb-4 text-sm text-gray-400">
+                                <span class="iconify" data-icon="material-symbols:person"></span>
+                                <span>参会人员: ${m.people}</span>
+                            </div>
+                            <div class="bg-black/30 p-4 rounded-lg border border-gray-800">
+                                <p class="text-sm text-gray-300 leading-relaxed"><span class="text-purple-400 font-bold">摘要：</span>${m.summary}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            commonOverlay.classList.remove('hidden');
+        });
+
+        // 2. Inspection Images Logic
+        inspectionImagesBtn.addEventListener('click', () => {
+            modalTitle.innerText = "PLM 巡检图片与现场记录";
+            modalHeaderIcon.className = "p-2 bg-green-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:camera-enhance"></span>';
+
+            const inspections = [
+                { name: "核心变压器 A1 散热片抽检", time: "2026-03-20 09:15", loc: "动力车间 2F", status: "异常", desc: "边缘发现轻微渗油，建议跟进本体状态。", color: "text-red-400" },
+                { name: "机器人关节 J3 磨损分析", time: "2026-03-19 15:40", loc: "总装线", status: "正常", desc: "金属外壳光洁度良好，传动系统参数稳定。", color: "text-green-400" },
+                { name: "PLC 控制柜布线检查", time: "2026-03-19 11:20", loc: "中控室", status: "提示", desc: "部分标签脱落，需重新打印同步至数字孪生库。", color: "text-yellow-400" },
+                { name: "传感器阵列散热风扇", time: "2026-03-18 14:00", loc: "机房 BC 区", status: "正常", desc: "运行噪音 42dB，低于阈值。", color: "text-green-400" }
+            ];
+
+            commonContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${inspections.map((img, i) => `
+                        <div class="glass-panel border-gray-800 rounded-xl overflow-hidden group hover:border-green-500/50 transition-all">
+                            <div class="aspect-video bg-gray-800 relative flex items-center justify-center overflow-hidden">
+                                <img src="https://picsum.photos/seed/${i+10}/600/400" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" alt="Inspection">
+                                <div class="absolute top-4 left-4">
+                                    <span class="px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] text-white border border-white/20">${img.loc}</span>
+                                </div>
+                                <div class="absolute bottom-4 right-4">
+                                    <span class="px-3 py-1 bg-green-900/80 text-white text-xs rounded-full border border-green-500 font-bold">${img.status}</span>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-bold text-gray-200">${img.name}</h4>
+                                    <span class="text-[10px] text-gray-500">${img.time}</span>
+                                </div>
+                                <p class="text-sm text-gray-400">${img.desc}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            commonOverlay.classList.remove('hidden');
+        });
+
+        // 3. Voice Memos Logic
+        voiceMemosBtn.addEventListener('click', () => {
+            modalTitle.innerText = "员工 PLM 相关语音备忘录";
+            modalHeaderIcon.className = "p-2 bg-yellow-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:mic"></span>';
+
+            const firstNames = ["张", "王", "李", "赵", "钱", "孙", "周", "吴", "郑", "陈"];
+            const lastNames = ["建国", "敏", "超", "芳", "磊", "洋", "伟", "静", "波", "艳"];
+            const titles = ["本体定义反馈", "现场问题备注", "逻辑层更新建议", "接口联调异常", "巡检手动复位", "设备拓扑修改", "性能优化日报", "离线数据导入", "冲突解决记录", "版本更新总结"];
+
+            let voiceData = [];
+            for(let i=0; i<10; i++){
+                voiceData.push({
+                    name: firstNames[i] + lastNames[Math.floor(Math.random()*10)],
+                    title: titles[i],
+                    time: `2026-03-20 0${Math.floor(Math.random()*9+1)}:30`,
+                    duration: `${Math.floor(Math.random()*59+10)}s`,
+                    summary: i%2==0 ? "建议在本体定义中增加‘冗余度’属性，目前物理层缺失。" : "现场发现 3 号机器人的连接件与图谱不符，需手动订正。"
+                });
+            }
+
+            commonContent.innerHTML = `
+                <div class="space-y-4">
+                    ${voiceData.map(v => `
+                        <div class="glass-panel border-gray-800 p-4 rounded-xl flex items-center gap-6 hover:bg-gray-800/40 transition-all border-l-4 border-l-yellow-600/50">
+                            <div class="w-12 h-12 bg-yellow-600/20 rounded-full flex items-center justify-center text-yellow-500 shrink-0">
+                                <button class="hover:scale-125 transition-transform"><span class="iconify text-2xl" data-icon="material-symbols:play-arrow"></span></button>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-center mb-1">
+                                    <h4 class="text-sm font-bold text-white truncate">${v.title}</h4>
+                                    <span class="text-[10px] text-gray-500">${v.time}</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-xs text-gray-400 mb-2">
+                                    <span class="font-medium text-yellow-500/80">记录人: ${v.name}</span>
+                                    <span>时长: ${v.duration}</span>
+                                </div>
+                                <div class="w-full bg-gray-800 h-1 rounded-full overflow-hidden mb-2">
+                                    <div class="bg-yellow-500 h-full w-[0%]"></div>
+                                </div>
+                                <p class="text-[11px] text-gray-500 italic truncate">摘要: ${v.summary}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="p-2 hover:bg-gray-700 rounded-lg text-gray-400"><span class="iconify text-lg" data-icon="material-symbols:download"></span></button>
+                                <button class="p-2 hover:bg-gray-700 rounded-lg text-gray-400"><span class="iconify text-lg" data-icon="material-symbols:delete"></span></button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            commonOverlay.classList.remove('hidden');
+        });
+
+        // --- Ontology Generation & AI Matching Logic ---
+        const generateBtn = document.getElementById('generateOntologyBtn');
+        const modalFooter = document.getElementById('modalFooter');
+        const modalActionBtn = document.getElementById('modalActionBtn');
+
+        generateBtn.addEventListener('click', () => {
+            modalTitle.innerText = "智能本体提取与对齐引擎";
+            modalHeaderIcon.className = "p-2 bg-blue-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:bolt"></span>';
+            modalFooter.classList.add('hidden');
+            
+            // Step 1: Show Progress Bar
+            commonContent.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full py-12">
+                    <div class="w-full max-w-md bg-slate-100 h-4 rounded-full overflow-hidden mb-6 relative border border-slate-200 shadow-inner">
+                        <div id="extractionProgress" class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 h-full w-0 transition-all duration-300 ease-out shadow-lg"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span id="progressPercent" class="text-[10px] font-bold text-slate-400">0%</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <p id="progressStatus" class="font-bold text-slate-700 animate-pulse">正在解析非结构化数据源...</p>
+                        <p class="text-xs text-slate-400">AI 正在提取：PDF文档 (12份)、CAD图纸 (4份)、历史记录 (2400条)</p>
+                    </div>
+                </div>
+            `;
+            commonOverlay.classList.remove('hidden');
+
+            let progress = 0;
+            const progressEl = document.getElementById('extractionProgress');
+            const percentEl = document.getElementById('progressPercent');
+            const statusEl = document.getElementById('progressStatus');
+
+            const statusUpdates = [
+                "正在解析非结构化数据源...",
+                "实体抽取出实体 142 个...",
+                "正在进行实体消歧...",
+                "建立逻辑语义关联...",
+                "计算与现有本体的匹配度...",
+                "本体生成即将完成..."
+            ];
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 8;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    showComparisonView();
+                }
+                progressEl.style.width = progress + '%';
+                percentEl.innerText = Math.round(progress) + '%';
+                
+                const statusIdx = Math.min(Math.floor(progress / 20), statusUpdates.length - 1);
+                statusEl.innerText = statusUpdates[statusIdx];
+            }, 150);
+        });
+
+        function showComparisonView() {
+            commonContent.innerHTML = `
+                <div class="grid grid-cols-2 gap-8 h-full animate-[fadeIn_0.5s_ease-out]">
+                    <!-- Left: AI Extractions -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                            <h4 class="font-bold text-slate-700 flex items-center gap-2">
+                                <span class="iconify text-blue-500" data-icon="material-symbols:smart-toy"></span>
+                                AI 提取本体实体
+                            </h4>
+                            <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">新提取: 24</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                <span class="text-xs font-bold text-slate-700">直流牵引供电柜-05</span>
+                                <p class="text-[10px] text-slate-400">属性：额定功率: 2500KW, 型号: SL-2026</p>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                <span class="text-xs font-bold text-slate-700">绝缘监测传感器</span>
+                                <p class="text-[10px] text-slate-400">属性：灵敏度: 0.01mA, 采样频率: 50Hz</p>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-lg shadow-sm">
+                                <span class="text-xs font-bold text-slate-700">冗余辅助电源系统</span>
+                                <p class="text-[10px] text-slate-400">属性：热备冗余, 带载能力: 500A</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Existing Ontology -->
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                            <h4 class="font-bold text-slate-700 flex items-center gap-2">
+                                <span class="iconify text-slate-400" data-icon="material-symbols:database-outline"></span>
+                                现有本体概念库
+                            </h4>
+                            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold">库总量: 1,280</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-slate-50 border border-slate-200 border-dashed rounded-lg opacity-60">
+                                <span class="text-xs font-bold text-slate-500">主牵引箱单元</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-200 border-dashed rounded-lg opacity-60">
+                                <span class="text-xs font-bold text-slate-500">电压/电流监测组件</span>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-200 border-dashed rounded-lg opacity-60">
+                                <span class="text-xs font-bold text-slate-500">辅助整流逆变器</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="matchActionArea" class="mt-8 flex justify-center">
+                    <button id="smartMatchBtn" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold shadow-xl shadow-blue-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+                        <span class="iconify text-xl" data-icon="material-symbols:auto-fix-high"></span>
+                        开始智能语义匹配
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('smartMatchBtn').onclick = performSmartMatch;
+        }
+
+        function performSmartMatch() {
+            const matchBtn = document.getElementById('smartMatchBtn');
+            matchBtn.disabled = true;
+            matchBtn.innerHTML = '<span class="iconify animate-spin" data-icon="material-symbols:autorenew"></span> 匹配对齐中...';
+            
+            setTimeout(() => {
+                commonContent.innerHTML = `
+                    <div class="h-full flex flex-col gap-6 animate-[fadeIn_0.5s_ease-out]">
+                        <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl">
+                                    <span class="iconify" data-icon="material-symbols:check"></span>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-blue-800">冲突归一化分析完成</h4>
+                                    <p class="text-xs text-blue-600">匹配成功：18项 | 消歧处理：4项 | 建议新增：2项</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1.5 bg-white border border-blue-200 text-blue-600 text-[10px] font-bold rounded hover:bg-blue-50">查看报告</button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 grid grid-cols-3 gap-4 overflow-hidden">
+                            <div class="glass-panel border-green-200 bg-green-50/20 p-4 rounded-xl flex flex-col">
+                                <h5 class="text-xs font-bold text-green-700 mb-3 flex items-center gap-2">
+                                    <span class="iconify" data-icon="material-symbols:check-circle-outline"></span> 归一化成功 (Entities)
+                                </h5>
+                                <div class="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
+                                    <div class="text-[11px] p-2 bg-white rounded border border-green-100 flex justify-between">
+                                        <span>直流牵引柜-05 <span class="text-slate-300">→</span> <strong>牵引单元本体</strong></span>
+                                        <span class="text-green-500">98%</span>
+                                    </div>
+                                    <div class="text-[11px] p-2 bg-white rounded border border-green-100 flex justify-between">
+                                        <span>绝缘监测器 <span class="text-slate-300">→</span> <strong>绝缘检测组件</strong></span>
+                                        <span class="text-green-500">95%</span>
+                                    </div>
+                                    <div class="text-[11px] p-2 bg-white rounded border border-green-100 flex justify-between">
+                                        <span>PLM-102轴承 <span class="text-slate-300">→</span> <strong>机械传动模型</strong></span>
+                                        <span class="text-green-500">92%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel border-purple-200 bg-purple-50/20 p-4 rounded-xl flex flex-col">
+                                <h5 class="text-xs font-bold text-purple-700 mb-3 flex items-center gap-2">
+                                    <span class="iconify" data-icon="material-symbols:rule"></span> 属性聚合 (Attributes)
+                                </h5>
+                                <div class="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
+                                    <div class="text-[11px] p-2 bg-white rounded border border-purple-100">
+                                        <div class="flex justify-between font-bold mb-1"><span>额定电压</span><span class="text-purple-600">合并</span></div>
+                                        <p class="text-[9px] text-slate-400">映射源: AC-Volt, OperationV</p>
+                                    </div>
+                                    <div class="text-[11px] p-2 bg-white rounded border border-purple-100">
+                                        <div class="flex justify-between font-bold mb-1"><span>几何外壳</span><span class="text-purple-600">重定义</span></div>
+                                        <p class="text-[9px] text-slate-400">更新为统一 3D 属性空间</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel border-blue-200 bg-blue-50/20 p-4 rounded-xl flex flex-col">
+                                <h5 class="text-xs font-bold text-blue-700 mb-3 flex items-center gap-2">
+                                    <span class="iconify" data-icon="material-symbols:link"></span> 关系建立 (Relations)
+                                </h5>
+                                <div class="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-2">
+                                    <div class="text-[11px] p-2 bg-white rounded border border-blue-100">
+                                        <strong>[牵引柜]</strong> <span class="text-blue-500 px-1 italic">partOf</span> <strong>[主变压器]</strong>
+                                    </div>
+                                    <div class="text-[11px] p-2 bg-white rounded border border-blue-100">
+                                        <strong>[传感器]</strong> <span class="text-blue-500 px-1 italic">monitors</span> <strong>[轴承组件]</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modalFooter.classList.remove('hidden');
+                modalActionBtn.onclick = () => {
+                    // Final confirmation: Update Graph
+                    commonOverlay.classList.add('hidden');
+                    refreshKnowledgeGraph();
+                };
+            }, 1500);
+        }
+
+        function refreshKnowledgeGraph() {
+            // Visual feedback: briefly show a loading effect on canvas or just rebuild nodes
+            console.log("Refreshing Knowledge Graph based on new extraction...");
+            
+            // Add a temporary overlay for effect
+            const canvasContainer = canvas.parentElement;
+            const loader = document.createElement('div');
+            loader.className = "absolute inset-0 flex items-center justify-center bg-white/40 backdrop-blur-sm transition-opacity duration-1000";
+            loader.innerHTML = `
+                <div class="flex flex-col items-center gap-3">
+                    <span class="iconify text-4xl text-blue-600 animate-spin" data-icon="material-symbols:refresh"></span>
+                    <span class="text-xs font-bold text-blue-800 tracking-widest">同步本体变化中...</span>
+                </div>
+            `;
+            canvasContainer.appendChild(loader);
+
+            // Scramble nodes for visual effect
+            nodes.forEach(n => {
+                n.vx += (Math.random() - 0.5) * 5;
+                n.vy += (Math.random() - 0.5) * 5;
+            });
+
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 1000);
+            }, 1000);
+        }
+
+        // 导出关系连线
+        function openExportModal() {
+            modalTitle.innerText = "导出关系连线";
+            modalHeaderIcon.className = "p-2 bg-blue-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:download"></span>';
+
+            commonContent.innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                            <span class="iconify" data-icon="material-symbols:settings"></span> 导出配置
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-400 transition-colors cursor-pointer group export-format-option active" onclick="setFormat('PNG')">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-2 group-[.active]:bg-blue-600 group-[.active]:text-white">
+                                    <span class="iconify text-xl font-bold" data-icon="material-symbols:image"></span>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">PNG 图片</div>
+                                <div class="text-[10px] text-slate-400 mt-1">高清渲染位图 (1920x1080)</div>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-400 transition-colors cursor-pointer group export-format-option" onclick="setFormat('SVG')">
+                                <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 mb-2 group-[.active]:bg-indigo-600 group-[.active]:text-white">
+                                    <span class="iconify text-xl font-bold" data-icon="material-symbols:vector-library"></span>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">SVG 矢量图</div>
+                                <div class="text-[10px] text-slate-400 mt-1">矢量路径可缩放，不失真</div>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-400 transition-colors cursor-pointer group export-format-option" onclick="setFormat('JSON')">
+                                <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 mb-2 group-[.active]:bg-emerald-600 group-[.active]:text-white">
+                                    <span class="iconify text-xl font-bold" data-icon="material-symbols:data-object"></span>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">JSON 结构</div>
+                                <div class="text-[10px] text-slate-400 mt-1">全量本体节点及连线参数</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">导出范围</label>
+                            <select id="exportScope" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none">
+                                <option value="all">全部可见节点</option>
+                                <option value="selected">仅选中节点</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">导出样式</label>
+                            <select id="exportStyle" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none">
+                                <option value="standard">标准浅色 (Light)</option>
+                                <option value="blueprint">蓝图结构 (Blueprint)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                         <div class="text-xs font-bold text-blue-700 flex items-center gap-1.5 mb-1">
+                             <span class="iconify" data-icon="material-symbols:info"></span> 预计文件信息
+                         </div>
+                         <p class="text-[11px] text-blue-600/70">文件名: <span id="preview-filename">Ontology_Export_2026-03-20.png</span></p>
+                    </div>
+                </div>
+            `;
+            
+            modalFooter.classList.remove('hidden');
+            modalActionBtn.onclick = executeExport;
+            modalActionBtn.innerHTML = '<span class="iconify" data-icon="material-symbols:download"></span> 确认导出';
+            commonOverlay.classList.remove('hidden');
+            
+            window.selectedExportFormat = 'PNG';
+            window.updatePreviewFilename = function() {
+                const el = document.getElementById('preview-filename');
+                if (el) el.innerText = `Ontology_Export_2026-03-20.${window.selectedExportFormat.toLowerCase()}`;
+            };
+        }
+
+        function setFormat(fmt) {
+            window.selectedExportFormat = fmt;
+            document.querySelectorAll('.export-format-option').forEach(opt => {
+                opt.classList.remove('active', 'border-blue-600', 'bg-blue-50/50');
+            });
+            event.currentTarget.classList.add('active', 'border-blue-600', 'bg-blue-50/50');
+            window.updatePreviewFilename();
+        }
+
+        async function executeExport() {
+            const format = window.selectedExportFormat;
+            const timestamp = '2026-03-20';
+            const filename = `Ontology_Export_${timestamp}_V4.2.0.${format.toLowerCase()}`;
+            
+            // Show loading during export
+            modalActionBtn.disabled = true;
+            modalActionBtn.innerHTML = '<span class="iconify animate-spin" data-icon="material-symbols:refresh"></span> 生成中...';
+
+            setTimeout(() => {
+                if (format === 'PNG') {
+                    exportPNG(filename);
+                } else if (format === 'SVG') {
+                    exportSVG(filename);
+                } else if (format === 'JSON') {
+                    exportJSON(filename);
+                }
+                
+                modalActionBtn.disabled = false;
+                modalActionBtn.innerHTML = '<span class="iconify" data-icon="material-symbols:check-circle"></span> 导出完成';
+                setTimeout(() => { 
+                    commonOverlay.classList.add('hidden');
+                }, 1000);
+            }, 800);
+        }
+
+        function exportPNG(filename) {
+            // Create temporary canvas to redraw without background grid if needed
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        function exportSVG(filename) {
+            const svgWidth = width;
+            const svgHeight = height;
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" style="background-color: #f8fafc;">`;
+            
+            // Add Styles
+            svgContent += `<style>text { font-family: Inter, sans-serif; }</style>`;
+
+            // Links
+            links.forEach(link => {
+                svgContent += `<line x1="${link.source.x}" y1="${link.source.y}" x2="${link.target.x}" y2="${link.target.y}" stroke="#cbd5e1" stroke-width="1.2" />`;
+            });
+
+            // Nodes
+            nodes.forEach(node => {
+                svgContent += `
+                    <circle cx="${node.x}" cy="${node.y}" r="${node.radius}" fill="${node.color}" stroke="white" stroke-width="2" />
+                    <text x="${node.x + 14}" y="${node.y + 4}" fill="#64748b" font-size="11" font-weight="500">${node.label}</text>
+                `;
+            });
+
+            svgContent += `</svg>`;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportJSON(filename) {
+            // Deep clone and clean up references for JSON serialization
+            const exportData = {
+                version: "4.2.0",
+                exportDate: "2026-03-20",
+                nodes: nodes.map(n => ({
+                    id: n.id,
+                    label: n.label,
+                    category: n.category,
+                    x: n.x.toFixed(2),
+                    y: n.y.toFixed(2),
+                    attributes: n.attributes,
+                    color: n.color
+                })),
+                links: links.map(l => ({
+                    source: l.source.id,
+                    target: l.target.id,
+                    type: "association"
+                }))
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", filename);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        // Handle close button
+        closeCommonBtn.addEventListener('click', () => {
+             commonOverlay.classList.add('hidden');
+        });
+
+        // Version selection simulated update
+        const versionSelect = document.getElementById('ontology-version');
+        versionSelect.addEventListener('change', (e) => {
+            console.log("Switching to version:", e.target.value);
+            refreshKnowledgeGraph();
+        });
+
+        // --- 本体数据模态框实现在线 ---
+        let ontologyDataResizeHandler = null;
+        function openOntologyDataModal() {
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalFrame = commonOverlay.querySelector('.glass-panel');
+
+            modalTitle.innerText = "本体数据管理中心 - 实时ETL生成引擎";
+            modalHeaderIcon.className = "p-2 bg-blue-600 rounded-lg text-white";
+            modalHeaderIcon.innerHTML = '<span class="iconify text-2xl" data-icon="material-symbols:account-tree"></span>';
+            modalSubtitle.innerText = '当前日期：2026年03月20日 | 语义对齐状态：已就绪';
+            modalFrame.className = "glass-panel w-full max-w-[95vw] h-[90vh] rounded-2xl flex flex-col overflow-hidden border-white/50 shadow-2xl bg-white/95";
+
+            commonContent.innerHTML = `
+                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#3b82f6 1px, transparent 1px); background-size: 24px 24px;"></div>
+                <div class="relative h-full flex flex-col">
+                    <div class="px-2 py-2 flex justify-end">
+                        <div class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold border border-emerald-100 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> 系统运行正常 (0.42ms)
+                        </div>
+                    </div>
+                    <div class="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 relative overflow-hidden">
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none z-10" id="ontologyFlowSvg"></svg>
+                        <div class="lg:col-span-3 flex flex-col gap-4 overflow-hidden">
+                            <div class="flex items-center gap-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100">
+                                <span class="iconify text-blue-600" data-icon="material-symbols:database-outline"></span>
+                                <span class="text-xs font-bold text-slate-700 uppercase">多元异构数据源</span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4" id="sourceStage">
+                                <div class="p-3 bg-white border border-slate-200 rounded-2xl node-card" data-id="src-rdb">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] font-bold text-blue-600">数据库 (PLM/EMS/ERP)</span>
+                                        <span class="text-[8px] px-1 bg-blue-50 text-blue-500 rounded">RDB</span>
+                                    </div>
+                                    <div class="space-y-1.5 text-[10px] text-slate-500 font-mono">
+                                        <div class="flex justify-between border-b border-slate-50 pb-1"><span>工艺参数</span><span class="text-slate-400">EMS_0320</span></div>
+                                        <div class="flex justify-between border-b border-slate-50 pb-1"><span>生产流程</span><span class="text-slate-400">PLM_MAIN</span></div>
+                                        <div class="flex justify-between"><span>库存/物流</span><span class="text-slate-400">ERP_SYNC</span></div>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-white border border-slate-200 rounded-2xl node-card" data-id="src-ts">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] font-bold text-indigo-600">时序数据源</span>
+                                        <span class="text-[8px] px-1 bg-indigo-50 text-indigo-500 rounded">IOT</span>
+                                    </div>
+                                    <div class="text-[9px] text-slate-400">已接入 A03、B07 精密传感器时序流，采样率 200kHz。</div>
+                                </div>
+                                <div class="p-3 bg-white border border-slate-200 rounded-2xl node-card" data-id="src-doc">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] font-bold text-orange-600">企业文档记录</span>
+                                        <span class="text-[8px] px-1 bg-orange-50 text-orange-500 rounded">DOCS</span>
+                                    </div>
+                                    <ul class="text-[9px] text-slate-500 list-disc list-inside">
+                                        <li>维修手册_2026_Final.pdf</li>
+                                        <li>设备说明书_v2.docx</li>
+                                    </ul>
+                                </div>
+                                <div class="p-3 bg-white border border-slate-200 rounded-2xl node-card" data-id="src-voice">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] font-bold text-emerald-600">语音备忘与会议记录</span>
+                                        <span class="text-[8px] px-1 bg-emerald-50 text-emerald-500 rounded">AUDIO</span>
+                                    </div>
+                                    <div class="text-[9px] text-slate-500 p-2 bg-slate-50 rounded italic border-l-2 border-emerald-300">
+                                        "0320巡检建议：加强物理层冗余度属性..."
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-4 flex flex-col gap-4 overflow-hidden pt-0 lg:pt-4">
+                            <div class="flex items-center gap-2 p-2 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                                <span class="iconify text-indigo-600" data-icon="material-symbols:account-tree-outline-rounded"></span>
+                                <span class="text-xs font-bold text-slate-700 uppercase">本体概念列表 (Schema)</span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6 flex flex-col justify-center" id="ontStage">
+                                <div class="p-4 bg-indigo-600 text-white rounded-3xl node-card shadow-indigo-100 shadow-xl" data-id="ont-product">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-sm font-bold italic">PhysicalProduct</h4>
+                                        <span class="text-[8px] bg-white/20 px-2 py-0.5 rounded">CONCEPT</span>
+                                    </div>
+                                    <div class="text-[10px] opacity-70">关联源: PLM_MAIN, ERP_SYNC</div>
+                                </div>
+                                <div class="p-4 bg-violet-600 text-white rounded-3xl node-card shadow-violet-100 shadow-xl" data-id="ont-process">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-sm font-bold italic">ProductionProcess</h4>
+                                        <span class="text-[8px] bg-white/20 px-2 py-0.5 rounded">CONCEPT</span>
+                                    </div>
+                                    <div class="text-[10px] opacity-70">关联源: EMS_0320, DOCS</div>
+                                </div>
+                                <div class="p-4 bg-slate-700 text-white rounded-3xl node-card shadow-slate-200 shadow-xl" data-id="ont-event">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="text-sm font-bold italic">MaintenanceEvent</h4>
+                                        <span class="text-[8px] bg-white/20 px-2 py-0.5 rounded">CONCEPT</span>
+                                    </div>
+                                    <div class="text-[10px] opacity-70">关联源: IOT, AUDIO</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-5 flex flex-col gap-4 overflow-hidden">
+                            <div class="flex items-center gap-2 p-2 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                                <span class="iconify text-emerald-600" data-icon="material-symbols:installs-outline"></span>
+                                <span class="text-xs font-bold text-slate-700 uppercase">本体数据实体 (ETL Result)</span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4" id="entityStage">
+                                <div class="p-4 bg-white border-2 border-dashed border-emerald-200 rounded-2xl node-card" data-id="ent-1">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="entity-tag">实体: PID-X900</span>
+                                        <div class="flex items-center gap-1 text-[8px] text-emerald-500 font-bold uppercase"><span class="w-1 h-1 bg-emerald-500 rounded-full animate-ping"></span> 实时更新</div>
+                                    </div>
+                                    <div class="text-[10px] text-slate-600 font-mono space-y-1">
+                                        <div class="flex justify-between"><span>生产批次:</span><span>2026-0320-A</span></div>
+                                        <div class="flex justify-between"><span>物理材质:</span><span>Titanium_G5</span></div>
+                                        <div class="flex justify-between"><span>设计权重:</span><span>42.5 kg</span></div>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-white border-2 border-dashed border-emerald-200 rounded-2xl node-card" data-id="ent-2">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="entity-tag">实体: Task_Rule_08</span>
+                                        <span class="text-[8px] text-slate-400">来自企业文档/PLM</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-600 italic">
+                                        正在从《精密零件工艺参数白皮书》提取关联规则：当振动幅度 &gt; 0.05mm 时触发本体质量反向修正。
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-white border-2 border-dashed border-emerald-200 rounded-2xl node-card" data-id="ent-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="entity-tag">实体: SafetyLog_#44</span>
+                                        <span class="text-[8px] text-emerald-500 font-bold italic">提取自巡检语音</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 mt-1">
+                                        <p><strong>语义转换结果:</strong> 物理层冗余度属性需在上层本体结构 [Subsystem] 中增加 "Redundancy_Level" 枚举项值。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modalFooter.classList.remove('hidden');
+            modalActionBtn.innerHTML = '<span class="iconify" data-icon="material-symbols:save"></span> 完成并保存映射';
+            modalActionBtn.onclick = () => {
+                resetCommonModalShell();
+                commonOverlay.classList.add('hidden');
+                refreshKnowledgeGraph();
+            };
+            commonOverlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                initETLVisualization();
+            }, 50);
+        }
+
+        function initETLVisualization() {
+            const svg = document.getElementById('ontologyFlowSvg');
+            if (!svg) return;
+
+            if (ontologyDataResizeHandler) {
+                window.removeEventListener('resize', ontologyDataResizeHandler);
+            }
+
+            const drawFlow = () => {
+                svg.innerHTML = '';
+
+                const paths = [
+                    { from: 'src-rdb', to: 'ont-product', className: 'line-source-to-ont' },
+                    { from: 'src-rdb', to: 'ont-process', className: 'line-source-to-ont' },
+                    { from: 'src-ts', to: 'ont-event', className: 'line-source-to-ont' },
+                    { from: 'src-doc', to: 'ont-process', className: 'line-source-to-ont' },
+                    { from: 'src-voice', to: 'ont-event', className: 'line-source-to-ont' },
+                    { from: 'ont-product', to: 'ent-1', className: 'line-ont-to-entity' },
+                    { from: 'ont-process', to: 'ent-2', className: 'line-ont-to-entity' },
+                    { from: 'ont-event', to: 'ent-3', className: 'line-ont-to-entity' }
+                ];
+
+                paths.forEach(({ from, to, className }) => {
+                    const startEl = document.querySelector(`[data-id="${from}"]`);
+                    const endEl = document.querySelector(`[data-id="${to}"]`);
+
+                    if (!startEl || !endEl) return;
+
+                    const rect1 = startEl.getBoundingClientRect();
+                    const rect2 = endEl.getBoundingClientRect();
+                    const svgRect = svg.getBoundingClientRect();
+                    const x1 = rect1.right - svgRect.left;
+                    const y1 = rect1.top + rect1.height / 2 - svgRect.top;
+                    const x2 = rect2.left - svgRect.left;
+                    const y2 = rect2.top + rect2.height / 2 - svgRect.top;
+                    const cp1x = x1 + (x2 - x1) / 2;
+
+                    const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    pathEl.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp1x} ${y2}, ${x2} ${y2}`);
+                    pathEl.setAttribute('fill', 'none');
+                    pathEl.setAttribute('stroke-width', '1.5');
+                    pathEl.setAttribute('stroke-dasharray', '4 4');
+                    pathEl.style.animation = 'dash-move 1s linear infinite';
+                    pathEl.style.stroke = className === 'line-source-to-ont' ? '#94a3b8' : '#3b82f6';
+                    svg.appendChild(pathEl);
+                });
+            };
+
+            ontologyDataResizeHandler = drawFlow;
+            window.addEventListener('resize', ontologyDataResizeHandler);
+            drawFlow();
+        }
+    </script>
+</body>
+</html>

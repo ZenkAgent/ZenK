@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zenk 决策智能体解决方案 - 让每一个企业拥有专属AI数字员工</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050a12;
+      --bg-secondary: #0a1020;
+      --fg: #e8f0f8;
+      --fg-muted: #7a8ca0;
+      --accent: #00e5bf;
+      --accent-secondary: #0ea5e9;
+      --accent-glow: rgba(0, 229, 191, 0.3);
+      --card: rgba(15, 25, 45, 0.8);
+      --border: rgba(0, 229, 191, 0.15);
+      --highlight-warm: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --layer-platform: #00e5bf;
+      --layer-model: #8b5cf6;
+      --layer-data: #3b82f6;
+      --layer-app: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      overflow-x: hidden;
+    }
+
+    .font-display { font-family: 'Orbitron', sans-serif; }
+
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .grid-bg {
+      background-image: 
+        linear-gradient(rgba(0, 229, 191, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 191, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .gradient-overlay {
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 229, 191, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(14, 165, 233, 0.06) 0%, transparent 50%);
+    }
+
+    .glow-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+
+    .module-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .module-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--accent-glow);
+    }
+
+    .module-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .module-card:hover::before { opacity: 1; }
+
+    .capability-tag {
+      background: rgba(0, 229, 191, 0.08);
+      border: 1px solid rgba(0, 229, 191, 0.2);
+      transition: all 0.3s;
+    }
+
+    .capability-tag:hover {
+      background: rgba(0, 229, 191, 0.15);
+      border-color: var(--accent);
+    }
+
+    /* 架构图样式 */
+    .arch-layer {
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .arch-layer:hover { transform: scale(1.02); }
+
+    .arch-layer-content {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .arch-module {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      min-width: 140px;
+      text-align: center;
+      transition: all 0.4s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .arch-module::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--module-color, var(--accent));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .arch-module:hover::before, .arch-module.active::before { opacity: 1; }
+
+    .arch-module:hover, .arch-module.active {
+      border-color: var(--module-color, var(--accent));
+      box-shadow: 0 0 30px rgba(0, 229, 191, 0.2);
+      transform: translateY(-4px);
+    }
+
+    .arch-module .icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      background: linear-gradient(135deg, var(--module-color, var(--accent)), var(--module-color-end, var(--accent-secondary)));
+    }
+
+    /* 连接线动画 */
+    .flow-line {
+      stroke-dasharray: 6 4;
+      animation: flowDash 1.5s linear infinite;
+    }
+
+    @keyframes flowDash { to { stroke-dashoffset: -20; } }
+
+    .flow-arrow { animation: flowPulse 2s ease-in-out infinite; }
+
+    @keyframes flowPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    /* 层级标签 */
+    .layer-badge {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      transform-origin: center;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .layer-badge.platform { color: var(--layer-platform); }
+    .layer-badge.model { color: var(--layer-model); }
+    .layer-badge.data { color: var(--layer-data); }
+    .layer-badge.app { color: var(--layer-app); }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .nav-link {
+      position: relative;
+      transition: color 0.3s;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+
+    .nav-link:hover::after { width: 100%; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-primary:hover::before { left: 100%; }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 229, 191, 0.3);
+    }
+
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .float { animation: float 6s ease-in-out infinite; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .stat-number {
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .timeline-container { position: relative; }
+    
+    .timeline-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, var(--accent), var(--accent-secondary), transparent);
+      transform: translateX(-50%);
+    }
+
+    .timeline-node { position: relative; transition: all 0.4s; }
+    .timeline-node:hover { transform: scale(1.02); }
+
+    .timeline-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .timeline-dot::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      opacity: 0.5;
+      animation: pulse-ring 2s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .quote-mark {
+      font-size: 120px;
+      line-height: 1;
+      opacity: 0.1;
+      position: absolute;
+      top: -20px;
+      left: -10px;
+      font-family: Georgia, serif;
+      color: var(--accent);
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, rgba(0, 229, 191, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+      border: 1px solid var(--border);
+      transition: all 0.4s;
+    }
+
+    .feature-card:hover {
+      background: linear-gradient(135deg, rgba(0, 229, 191, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    /* 详情面板 */
+    .detail-panel {
+      position: fixed;
+      top: 0;
+      right: -450px;
+      width: 450px;
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      z-index: 100;
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    .detail-panel.open { right: 0; }
+
+    .detail-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 99;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .detail-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* 预期效果轮播 */
+    .effect-carousel {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .effect-slide {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .effect-slide.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .effect-card {
+      background: linear-gradient(135deg, rgba(15, 25, 45, 0.9) 0%, rgba(10, 16, 32, 0.9) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .pain-point {
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid var(--danger);
+    }
+
+    .solution-box {
+      background: rgba(0, 229, 191, 0.05);
+      border-left: 3px solid var(--accent);
+    }
+
+    .carousel-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .carousel-btn:hover {
+      background: rgba(0, 229, 191, 0.1);
+      border-color: var(--accent);
+    }
+
+    .carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--fg-muted);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .carousel-dot.active {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .timeline-line { left: 20px; }
+      .timeline-dot { left: 20px; }
+      .detail-panel { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body class="grid-bg">
+  <canvas id="particle-canvas"></canvas>
+  <div class="gradient-overlay fixed inset-0 pointer-events-none z-0"></div>
+
+  <!-- 详情面板 -->
+  <div class="detail-overlay" id="detailOverlay"></div>
+  <div class="detail-panel" id="detailPanel">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold" id="detailTitle">模块详情</h3>
+        <button id="closeDetail" class="w-10 h-10 rounded-lg bg-[var(--card)] border border-[var(--border)] flex items-center justify-center hover:border-[var(--accent)] transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-opacity-80 backdrop-blur-md border-b border-[var(--border)]" style="background: rgba(5, 10, 18, 0.9);">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
+          <svg class="w-6 h-6 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <span class="font-display font-bold text-xl tracking-wider">ZENK</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#vision" class="nav-link text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]">背景理念</a>
+        <a href="#overview" class="nav-link text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]">方案概述</a>
+        <a href="#architecture" class="nav-link text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]">系统架构</a>
+        <a href="#modules" class="nav-link text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]">核心模块</a>
+        <a href="#effects" class="nav-link text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]">客户效果</a>
+      </div>
+      <button class="btn-primary px-5 py-2 rounded-lg text-sm font-medium text-[var(--bg)]">
+        获取方案
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero区域 -->
+  <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-6 py-20 relative z-10">
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] bg-[var(--card)] mb-8 reveal">
+          <span class="w-2 h-2 rounded-full bg-[var(--accent)] pulse"></span>
+          <span class="text-sm text-[var(--fg-muted)]">中科智衍 · 企业智能化转型解决方案</span>
+        </div>
+        
+        <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tight reveal" style="transition-delay: 0.1s;">
+          <span class="block text-[var(--fg)]">决策智能体</span>
+          <span class="block glow-text text-[var(--accent)]">解决方案</span>
+        </h1>
+        
+        <p class="text-xl md:text-2xl text-[var(--highlight-warm)] font-medium mb-8 reveal" style="transition-delay: 0.15s;">
+          让每一个企业拥有专属AI数字员工
+        </p>
+        
+        <p class="text-lg md:text-xl text-[var(--fg-muted)] max-w-3xl mx-auto mb-12 leading-relaxed reveal" style="transition-delay: 0.2s;">
+          通过大语言模型、树突神经网络决策模型、企业数字孪生与岗位技能应用集合，<br class="hidden md:block">
+          打造企业专属数字员工，构建开放AI生态
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center reveal" style="transition-delay: 0.3s;">
+          <button class="btn-primary px-8 py-4 rounded-xl text-base font-semibold text-[var(--bg)]">
+            了解详情
+          </button>
+          <button class="px-8 py-4 rounded-xl text-base font-medium border border-[var(--border)] bg-[var(--card)] hover:border-[var(--accent)] transition-all">
+            观看演示
+          </button>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 reveal" style="transition-delay: 0.4s;">
+        <div class="text-center p-6 rounded-xl bg-[var(--card)] border border-[var(--border)]">
+          <div class="font-display text-4xl font-bold stat-number mb-2">8+</div>
+          <div class="text-sm text-[var(--fg-muted)]">核心模块</div>
+        </div>
+        <div class="text-center p-6 rounded-xl bg-[var(--card)] border border-[var(--border)]">
+          <div class="font-display text-4xl font-bold stat-number mb-2">LLM</div>
+          <div class="text-sm text-[var(--fg-muted)]">大模型融合</div>
+        </div>
+        <div class="text-center p-6 rounded-xl bg-[var(--card)] border border-[var(--border)]">
+          <div class="font-display text-4xl font-bold stat-number mb-2">DNN</div>
+          <div class="text-sm text-[var(--fg-muted)]">树突神经网络</div>
+        </div>
+        <div class="text-center p-6 rounded-xl bg-[var(--card)] border border-[var(--border)]">
+          <div class="font-display text-4xl font-bold stat-number mb-2">RAG</div>
+          <div class="text-sm text-[var(--fg-muted)]">增强推理</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 float">
+      <svg class="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 背景与理念 -->
+  <section id="vision" class="relative py-24 bg-[var(--bg-secondary)]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block text-[var(--accent)] text-sm font-medium tracking-widest mb-4">VISION & BACKGROUND</span>
+        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">背景与理念</h2>
+        <div class="glow-line w-24 mx-auto"></div>
+      </div>
+      
+      <div class="max-w-4xl mx-auto mb-20 reveal">
+        <div class="relative p-8 md:p-12 rounded-2xl bg-[var(--card)] border border-[var(--border)]">
+          <span class="quote-mark">"</span>
+          <blockquote class="relative z-10 text-xl md:text-2xl leading-relaxed text-[var(--fg)] mb-6">
+            我们正处于<span class="text-[var(--accent)] font-semibold">经验时代</span>，在AI发展的新阶段，<span class="text-[var(--highlight-warm)] font-semibold">经验将成为比数据更宝贵的核心资产</span>。
+          </blockquote>
+          <cite class="block text-right text-[var(--fg-muted)] not-italic">
+            — Richard S. Sutton，强化学习之父
+          </cite>
+        </div>
+      </div>
+      
+      <div class="mb-20">
+        <h3 class="text-2xl font-bold text-center mb-12 reveal">AI发展趋势</h3>
+        <div class="timeline-container relative">
+          <div class="timeline-line hidden md:block"></div>
+          
+          <div class="grid md:grid-cols-4 gap-6 md:gap-4">
+            <div class="timeline-node reveal">
+              <div class="p-6 rounded-xl bg-[var(--card)] border border-[var(--border)] h-full">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] flex items-center justify-center mb-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <h4 class="font-semibold mb-2">生成式AI</h4>
+                <p class="text-sm text-[var(--fg-muted)]">大语言模型快速发展，内容生成能力突破</p>
+              </div>
+            </div>
+            
+            <div class="timeline-node reveal" style="transition-delay: 0.1s;">
+              <div class="p-6 rounded-xl bg-[var(--card)] border border-[var(--border)] h-full relative">
+                <div class="absolute -top-3 left-4 px-3 py-1 rounded-full bg-[var(--highlight-warm)] text-[var(--bg)] text-xs font-bold">
+                  当前阶段
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center mb-4 mt-2">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <h4 class="font-semibold mb-2">世界模型</h4>
+                <p class="text-sm text-[var(--fg-muted)]">具身智能与智能体深度融合，形成完整闭环</p>
+              </div>
+            </div>
+            
+            <div class="timeline-node reveal" style="transition-delay: 0.2s;">
+              <div class="p-6 rounded-xl bg-[var(--card)] border border-[var(--border)] h-full relative">
+                <div class="absolute -top-3 left-4 px-3 py-1 rounded-full bg-[var(--accent)] text-[var(--bg)] text-xs font-bold">
+                  2026-2028
+                </div>
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#10b981] to-[#06b6d4] flex items-center justify-center mb-4 mt-2">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
+                <h4 class="font-semibold mb-2">Agent商业化元年</h4>
+                <p class="text-sm text-[var(--fg-muted)]">垂直模型爆发，具身智能落地，世界模型试水</p>
+              </div>
+            </div>
+            
+            <div class="timeline-node reveal" style="transition-delay: 0.3s;">
+              <div class="p-6 rounded-xl bg-[var(--card)] border border-[var(--border)] h-full">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center mb-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                  </svg>
+                </div>
+                <h4 class="font-semibold mb-2">通用人工智能</h4>
+                <p class="text-sm text-[var(--fg-muted)]">AGI时代到来，智能全面赋能各行各业</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6 reveal">
+        <div class="feature-card rounded-xl p-6">
+          <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h4 class="font-semibold text-lg mb-2">经验数字化</h4>
+          <p class="text-sm text-[var(--fg-muted)] leading-relaxed">将企业和个人的宝贵经验与数据，通过人工智能方式转化为可复用的智能能力</p>
+        </div>
+        
+        <div class="feature-card rounded-xl p-6">
+          <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+            </svg>
+          </div>
+          <h4 class="font-semibold text-lg mb-2">能力智能化</h4>
+          <p class="text-sm text-[var(--fg-muted)] leading-relaxed">转化成懂业务、懂流程、懂决策的智能化能力，赋能行业与生态</p>
+        </div>
+        
+        <div class="feature-card rounded-xl p-6">
+          <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-[#f59e0b] to-[#ef4444] flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <h4 class="font-semibold text-lg mb-2">生态共赢</h4>
+          <p class="text-sm text-[var(--fg-muted)] leading-relaxed">开放创作者中心，让更多企业拥有同等的AI应用能力，普及智能体应用</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 方案概述 -->
+  <section id="overview" class="relative py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block text-[var(--accent)] text-sm font-medium tracking-widest mb-4">OVERVIEW</span>
+        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">方案概述</h2>
+        <div class="glow-line w-24 mx-auto"></div>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="reveal">
+          <h3 class="text-2xl font-bold mb-6 text-[var(--fg)]">智能化转型的核心引擎</h3>
+          <p class="text-[var(--fg-muted)] leading-relaxed mb-8">
+            Zenk决策智能体解决方案通过中科智衍智能体平台、决策模型、技能应用为企业提供智能化转型能力和应用。核心架构融合大语言模型的语义理解能力、自研树突神经网络决策模型的推理预测能力，以及企业数字孪生的本体中心，实现从数据到决策的全链路智能化。
+          </p>
+          
+          <div class="space-y-4">
+            <div class="flex items-start gap-4 p-4 rounded-lg bg-[var(--card)] border border-[var(--border)]">
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">开源开放生态</h4>
+                <p class="text-sm text-[var(--fg-muted)]">企业、个人创作者通过创作者中心借助AI能力创作或改进技能应用</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-4 p-4 rounded-lg bg-[var(--card)] border border-[var(--border)]">
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">专属数字员工</h4>
+                <p class="text-sm text-[var(--fg-muted)]">打造企业专属领域、场景的应用，普及AI智能体应用能力</p>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-4 p-4 rounded-lg bg-[var(--card)] border border-[var(--border)]">
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">可信溯源</h4>
+                <p class="text-sm text-[var(--fg-muted)]">根据会话案例或手工输入描述拆解语义，输出结果可溯源、可信</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="reveal" style="transition-delay: 0.2s;">
+          <div class="relative p-8 rounded-2xl bg-[var(--card)] border border-[var(--border)]">
+            <svg class="w-full h-80" viewBox="0 0 400 300">
+              <defs>
+                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color:rgba(0,229,191,0)"/>
+                  <stop offset="50%" style="stop-color:rgba(0,229,191,0.6)"/>
+                  <stop offset="100%" style="stop-color:rgba(0,229,191,0)"/>
+                </linearGradient>
+              </defs>
+              <path class="flow-line" d="M200 60 L200 120" stroke="url(#lineGrad)" stroke-width="2" fill="none"/>
+              <path class="flow-line" d="M120 150 L80 150 L80 200" stroke="url(#lineGrad)" stroke-width="2" fill="none" style="animation-delay: 0.3s"/>
+              <path class="flow-line" d="M280 150 L320 150 L320 200" stroke="url(#lineGrad)" stroke-width="2" fill="none" style="animation-delay: 0.5s"/>
+              <path class="flow-line" d="M160 180 L160 240" stroke="url(#lineGrad)" stroke-width="2" fill="none" style="animation-delay: 0.7s"/>
+              <path class="flow-line" d="M240 180 L240 240" stroke="url(#lineGrad)" stroke-width="2" fill="none" style="animation-delay: 0.9s"/>
+              
+              <rect x="130" y="30" width="140" height="50" rx="8" fill="rgba(0,229,191,0.15)" stroke="rgba(0,229,191,0.4)" stroke-width="1"/>
+              <text x="200" y="60" text-anchor="middle" fill="var(--fg)" font-size="12" font-weight="600">决策智能体平台</text>
+              
+              <rect x="50" y="120" width="100" height="50" rx="8" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)" stroke-width="1"/>
+              <text x="100" y="150" text-anchor="middle" fill="var(--fg)" font-size="11">大语言模型</text>
+              
+              <rect x="150" y="120" width="100" height="50" rx="8" fill="rgba(139,92,246,0.15)" stroke="rgba(139,92,246,0.4)" stroke-width="1"/>
+              <text x="200" y="150" text-anchor="middle" fill="var(--fg)" font-size="11">决策模型</text>
+              
+              <rect x="250" y="120" width="100" height="50" rx="8" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.4)" stroke-width="1"/>
+              <text x="300" y="150" text-anchor="middle" fill="var(--fg)" font-size="11">本体中心</text>
+              
+              <rect x="30" y="200" width="100" height="50" rx="8" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+              <text x="80" y="230" text-anchor="middle" fill="var(--fg)" font-size="11">应用商店</text>
+              
+              <rect x="110" y="240" width="100" height="50" rx="8" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+              <text x="160" y="270" text-anchor="middle" fill="var(--fg)" font-size="11">开发者工具</text>
+              
+              <rect x="190" y="240" width="100" height="50" rx="8" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.4)" stroke-width="1"/>
+              <text x="240" y="270" text-anchor="middle" fill="var(--fg)" font-size="11">数据接入</text>
+              
+              <rect x="270" y="200" width="100" height="50" rx="8" fill="rgba(245,158,11,0.15)" stroke="rgba(245,158,11,0.4)" stroke-width="1"/>
+              <text x="320" y="230" text-anchor="middle" fill="var(--fg)" font-size="11">决策智能体</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 系统架构 -->
+  <section id="architecture" class="relative py-24 bg-[var(--bg-secondary)]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block text-[var(--accent)] text-sm font-medium tracking-widest mb-4">ARCHITECTURE</span>
+        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">系统架构</h2>
+        <div class="glow-line w-24 mx-auto"></div>
+        <p class="text-[var(--fg-muted)] mt-6 max-w-2xl mx-auto">
+          四层架构设计，实现从数据到决策的完整闭环
+        </p>
+      </div>
+
+      <!-- 架构图主体 -->
+      <div class="relative max-w-5xl mx-auto reveal" style="transition-delay: 0.1s;">
+        <!-- 平台层 -->
+        <div class="arch-layer mb-6 relative pl-16 md:pl-24">
+          <div class="layer-badge platform">Platform</div>
+          <div class="p-1 rounded-2xl" style="background: linear-gradient(135deg, rgba(0,229,191,0.2), rgba(0,229,191,0.05));">
+            <div class="bg-[var(--bg)] rounded-xl p-4 md:p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-3 h-3 rounded-full bg-[var(--layer-platform)]"></div>
+                <span class="text-sm font-medium text-[var(--layer-platform)]">平台层 Platform Layer</span>
+              </div>
+              <div class="arch-layer-content">
+                <div class="arch-module" data-module="platform" style="--module-color: #00e5bf; --module-color-end: #0ea5e9;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">决策智能体平台</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Zenk Platform</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据流动指示器 -->
+        <div class="flex justify-center my-4">
+          <div class="flex flex-col items-center">
+            <svg class="w-6 h-6 text-[var(--accent)] flow-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+            <span class="text-xs text-[var(--fg-muted)] mt-1">数据交互</span>
+          </div>
+        </div>
+
+        <!-- 模型层 -->
+        <div class="arch-layer mb-6 relative pl-16 md:pl-24">
+          <div class="layer-badge model">Model</div>
+          <div class="p-1 rounded-2xl" style="background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(139,92,246,0.05));">
+            <div class="bg-[var(--bg)] rounded-xl p-4 md:p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-3 h-3 rounded-full bg-[var(--layer-model)]"></div>
+                <span class="text-sm font-medium text-[var(--layer-model)]">模型层 Model Layer</span>
+              </div>
+              <div class="arch-layer-content">
+                <div class="arch-module" data-module="llm" style="--module-color: #f59e0b; --module-color-end: #ef4444;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">大语言模型</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">LLM Integration</div>
+                </div>
+                <div class="arch-module" data-module="engine" style="--module-color: #8b5cf6; --module-color-end: #ec4899;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">决策模型</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Decision Engine</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据流动指示器 -->
+        <div class="flex justify-center my-4">
+          <div class="flex flex-col items-center">
+            <svg class="w-6 h-6 text-[var(--accent)] flow-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation-delay: 0.5s;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+            <span class="text-xs text-[var(--fg-muted)] mt-1">知识推理</span>
+          </div>
+        </div>
+
+        <!-- 数据层 -->
+        <div class="arch-layer mb-6 relative pl-16 md:pl-24">
+          <div class="layer-badge data">Data</div>
+          <div class="p-1 rounded-2xl" style="background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(59,130,246,0.05));">
+            <div class="bg-[var(--bg)] rounded-xl p-4 md:p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-3 h-3 rounded-full bg-[var(--layer-data)]"></div>
+                <span class="text-sm font-medium text-[var(--layer-data)]">数据层 Data Layer</span>
+              </div>
+              <div class="arch-layer-content">
+                <div class="arch-module" data-module="ontology" style="--module-color: #14b8a6; --module-color-end: #22d3ee;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">本体中心</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Ontology Center</div>
+                </div>
+                <div class="arch-module" data-module="data" style="--module-color: #3b82f6; --module-color-end: #6366f1;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">数据接入工具</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Data Link</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据流动指示器 -->
+        <div class="flex justify-center my-4">
+          <div class="flex flex-col items-center">
+            <svg class="w-6 h-6 text-[var(--accent)] flow-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="animation-delay: 1s;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+            <span class="text-xs text-[var(--fg-muted)] mt-1">应用交付</span>
+          </div>
+        </div>
+
+        <!-- 应用层 -->
+        <div class="arch-layer relative pl-16 md:pl-24">
+          <div class="layer-badge app">Application</div>
+          <div class="p-1 rounded-2xl" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05));">
+            <div class="bg-[var(--bg)] rounded-xl p-4 md:p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-3 h-3 rounded-full bg-[var(--layer-app)]"></div>
+                <span class="text-sm font-medium text-[var(--layer-app)]">应用层 Application Layer</span>
+              </div>
+              <div class="arch-layer-content">
+                <div class="arch-module" data-module="agent" style="--module-color: #10b981; --module-color-end: #06b6d4;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">决策智能体</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Ontology Agent</div>
+                </div>
+                <div class="arch-module" data-module="store" style="--module-color: #a855f7; --module-color-end: #d946ef;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">应用商店</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Zenk Store</div>
+                </div>
+                <div class="arch-module" data-module="dev" style="--module-color: #f97316; --module-color-end: #facc15;">
+                  <div class="icon-wrap">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                    </svg>
+                  </div>
+                  <div class="font-semibold text-sm">开发者工具</div>
+                  <div class="text-xs text-[var(--fg-muted)] mt-1">Dev Tools</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 架构说明 -->
+      <div class="grid md:grid-cols-4 gap-4 mt-16 reveal" style="transition-delay: 0.3s;">
+        <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-3 h-3 rounded-full bg-[var(--layer-platform)]"></div>
+            <span class="font-medium text-sm">平台层</span>
+          </div>
+          <p class="text-xs text-[var(--fg-muted)]">统一入口与调度中枢，整合智能体通用能力、权限管理、统计分析</p>
+        </div>
+        <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-3 h-3 rounded-full bg-[var(--layer-model)]"></div>
+            <span class="font-medium text-sm">模型层</span>
+          </div>
+          <p class="text-xs text-[var(--fg-muted)]">大语言模型与决策模型融合，实现语义理解与推理决策</p>
+        </div>
+        <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-3 h-3 rounded-full bg-[var(--layer-data)]"></div>
+            <span class="font-medium text-sm">数据层</span>
+          </div>
+          <p class="text-xs text-[var(--fg-muted)]">本体中心构建企业数字孪生，数据接入工具实现多元数据融合</p>
+        </div>
+        <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--card)]">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-3 h-3 rounded-full bg-[var(--layer-app)]"></div>
+            <span class="font-medium text-sm">应用层</span>
+          </div>
+          <p class="text-xs text-[var(--fg-muted)]">面向终端用户的应用交付，包括智能体交互、技能商店、开发工具</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 核心模块详情 -->
+  <section id="modules" class="relative py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <span class="inline-block text-[var(--accent)] text-sm font-medium tracking-widest mb-4">MODULES</span>
+        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">核心模块详情</h2>
+        <div class="glow-line w-24 mx-auto"></div>
+        <p class="text-[var(--fg-muted)] mt-6">点击架构图中的模块查看详细信息</p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8" id="module-details">
+        <div class="module-card relative rounded-2xl p-8 reveal">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold mb-1">决策智能体平台</h3>
+              <p class="text-sm text-[var(--fg-muted)]">Zenk Decision Intelligence Platform</p>
+            </div>
+          </div>
+          <p class="text-[var(--fg-muted)] mb-6 text-sm leading-relaxed">
+            核心枢纽平台，整合智能体通用能力、自然语言理解、大模型调用、决策引擎接入等核心功能。
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">Claw能力</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">Skills技能</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">RAG增强</span>
+          </div>
+        </div>
+
+        <div class="module-card relative rounded-2xl p-8 reveal" style="transition-delay: 0.1s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8b5cf6] to-[#ec4899] flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold mb-1">决策模型</h3>
+              <p class="text-sm text-[var(--fg-muted)]">Zenk Decision Engine</p>
+            </div>
+          </div>
+          <p class="text-[var(--fg-muted)] mb-6 text-sm leading-relaxed">
+            基于自研树突神经网络算法，支持图计算，具备强大的推理、决策、预测能力。
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">树突神经网络</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">图计算</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">推理预测</span>
+          </div>
+        </div>
+
+        <div class="module-card relative rounded-2xl p-8 reveal" style="transition-delay: 0.2s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#14b8a6] to-[#22d3ee] flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold mb-1">本体中心</h3>
+              <p class="text-sm text-[var(--fg-muted)]">Zenk Ontology Center</p>
+            </div>
+          </div>
+          <p class="text-[var(--fg-muted)] mb-6 text-sm leading-relaxed">
+            企业数字孪生的核心，具备自我进化能力，支持本体版本管理和可视化大屏展现。
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">数字孪生</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">自我进化</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">版本管理</span>
+          </div>
+        </div>
+
+        <div class="module-card relative rounded-2xl p-8 reveal" style="transition-delay: 0.3s;">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#10b981] to-[#06b6d4] flex items-center justify-center flex-shrink-0">
+              <svg class="w-6 h-6 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold mb-1">决策智能体</h3>
+              <p class="text-sm text-[var(--fg-muted)]">Zenk Ontology Agent</p>
+            </div>
+          </div>
+          <p class="text-[var(--fg-muted)] mb-6 text-sm leading-relaxed">
+            人机交互的Agent形态，实现可溯源可信的语义拆解输出，支持会话管理。
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">人机交互</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">可信溯源</span>
+            <span class="capability-tag px-3 py-1 rounded-full text-xs">会话管理</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 预期客户效果 (新增区域) -->
+  <section id="effects" class="relative py-24 bg-[var(--bg-secondary)]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-12 reveal">
+        <span class="inline-block text-[var(--accent)] text-sm font-medium tracking-widest mb-4">EXPECTED OUTCOMES</span>
+        <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">预期客户效果</h2>
+        <div class="glow-line w-24 mx-auto mb-6"></div>
+        <p class="text-[var(--fg-muted)] max-w-2xl mx-auto">以汽车零部件多级协同供应链为例，展示Zenk如何解决实际业务痛点</p>
+      </div>
+
+      <!-- 轮播容器 -->
+      <div class="relative max-w-5xl mx-auto reveal" style="transition-delay: 0.2s;">
+        <!-- 轮播内容 -->
+        <div class="effect-carousel" id="effectCarousel">
+          <!-- 场景一：解决长鞭效应 -->
+          <div class="effect-slide active">
+            <div class="effect-card p-6 md:p-8">
+              <div class="grid md:grid-cols-2 gap-6">
+                <!-- 痛点 -->
+                <div class="pain-point rounded-xl p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[rgba(239,68,68,0.2)] flex items-center justify-center">
+                      <svg class="w-5 h-5 text-[var(--danger)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-[var(--danger)]">痛点：长鞭效应</h4>
+                      <p class="text-xs text-[var(--fg-muted)]">需求信息扭曲逐级放大</p>
+                    </div>
+                  </div>
+                  <p class="text-sm text-[var(--fg-muted)] leading-relaxed mb-4">
+                    多级供应链（整车->经销商->部件->原料）间信息不透明，下游需求变动无法实时传导至上游，导致库存积压严重，资源浪费巨大。
+                  </p>
+                  <div class="flex items-center gap-2 text-xs text-[var(--danger)]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                    </svg>
+                    <span>库存成本增加 30%+ | 响应周期延长</span>
+                  </div>
+                </div>
+
+                <!-- 解决方案 -->
+                <div class="solution-box rounded-xl p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[rgba(0,229,191,0.2)] flex items-center justify-center">
+                      <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-[var(--accent)]">解决：全链路信息协同</h4>
+                      <p class="text-xs text-[var(--fg-muted)]">本体中心 + 决策模型</p>
+                    </div>
+                  </div>
+                  <ul class="space-y-3 text-sm text-[var(--fg-muted)]">
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">数据融合：</strong>数据接入工具实时对接各级供应商ERP/WMS数据</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">本体映射：</strong>建立"整车-部件-原料"层级映射，打破数据孤岛</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">智能预测：</strong>决策模型(DNN)实现精准需求预测</span>
+                    </li>
+                  </ul>
+                  <div class="mt-4 p-3 rounded-lg bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.3)]">
+                    <div class="flex items-center gap-2 text-xs text-[var(--success)]">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span class="font-medium">预期效果：需求预测准确率提升 40%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 场景二：解决断链风险 -->
+          <div class="effect-slide">
+            <div class="effect-card p-6 md:p-8">
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="pain-point rounded-xl p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[rgba(239,68,68,0.2)] flex items-center justify-center">
+                      <svg class="w-5 h-5 text-[var(--danger)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-[var(--danger)]">痛点：断链风险</h4>
+                      <p class="text-xs text-[var(--fg-muted)]">供应中断预警滞后</p>
+                    </div>
+                  </div>
+                  <p class="text-sm text-[var(--fg-muted)] leading-relaxed mb-4">
+                    供应链层级多、节点杂，任何一级供应商断供都会导致停产风险。传统模式下风险感知滞后，只能事后补救，损失巨大。
+                  </p>
+                  <div class="flex items-center gap-2 text-xs text-[var(--danger)]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>停产损失巨大 | 客户信任度下降</span>
+                  </div>
+                </div>
+
+                <div class="solution-box rounded-xl p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[rgba(0,229,191,0.2)] flex items-center justify-center">
+                      <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-[var(--accent)]">解决：智能感知与诊断</h4>
+                      <p class="text-xs text-[var(--fg-muted)]">决策智能体 + 决策引擎</p>
+                    </div>
+                  </div>
+                  <ul class="space-y-3 text-sm text-[var(--fg-muted)]">
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">智能感知：</strong>决策智能体7x24小时监控供应链状态</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">异常诊断：</strong>决策模型分析影响范围并追溯根源</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">主动预警：</strong>输出可溯源诊断报告，推荐替代方案</span>
+                    </li>
+                  </ul>
+                  <div class="mt-4 p-3 rounded-lg bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.3)]">
+                    <div class="flex items-center gap-2 text-xs text-[var(--success)]">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span class="font-medium">预期效果：风险响应时间缩短 70%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 场景三：三流协同 -->
+          <div class="effect-slide">
+            <div class="effect-card p-6 md:p-8">
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="pain-point rounded-xl p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[rgba(239,68,68,0.2)] flex items-center justify-center">
+                      <svg class="w-5 h-5 text-[var(--danger)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-[var(--danger)]">痛点：三流割裂</h4>
+                      <p class="text-xs text-[var(--fg-muted)]">物流、信息流、资金流协同难</p>
+                    </div>
+                  </div>
+                  <p class="text-sm text-[var(--fg-muted)] leading-relaxed mb-4">
+                    物流进度与资金结算脱节，信息流转滞后，导致财务对账困难、合规风险增加，难以实现成本与效率的平衡。
+                  </p>
+                  <div class="flex items-center gap-2 text-xs text-[var(--danger)]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>财务对账效率低 | 合规风险增加</span>
+                  </div>
+                </div>
+
+                <div class="solution-box rounded-xl p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-lg bg-[rgba(0,229,191,0.2)] flex items-center justify-center">
+                      <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-[var(--accent)]">解决：数字员工协同</h4>
+                      <p class="text-xs text-[var(--fg-muted)]">智能体平台 + Skills技能</p>
+                    </div>
+                  </div>
+                  <ul class="space-y-3 text-sm text-[var(--fg-muted)]">
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">物流Skill：</strong>自动追踪物流状态，更新本体中心数据</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">资金Skill：</strong>根据物流签收状态自动触发对账结算</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                      <div class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] mt-2 flex-shrink-0"></div>
+                      <span><strong class="text-[var(--fg)]">全局优化：</strong>统筹计算最优成本合规路径</span>
+                    </li>
+                  </ul>
+                  <div class="mt-4 p-3 rounded-lg bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.3)]">
+                    <div class="flex items-center gap-2 text-xs text-[var(--success)]">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span class="font-medium">预期效果：三流协同效率提升 50%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 轮播控制 -->
+        <div class="flex items-center justify-center gap-6 mt-8">
+          <button class="carousel-btn w-12 h-12 rounded-full flex items-center justify-center" id="prevBtn" aria-label="上一个">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          
+          <div class="flex items-center gap-3">
+            <button class="carousel-dot active" data-index="0" aria-label="第1页"></button>
+            <button class="carousel-dot" data-index="1" aria-label="第2页"></button>
+            <button class="carousel-dot" data-index="2" aria-label="第3页"></button>
+          </div>
+          
+          <button class="carousel-btn w-12 h-12 rounded-full flex items-center justify-center" id="nextBtn" aria-label="下一个">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 联系区域 -->
+  <section id="contact" class="relative py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="reveal">
+          <span class="inline-block text-[var(--accent)] text-sm font-medium tracking-widest mb-4">CONTACT US</span>
+          <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">开启智能化转型之旅</h2>
+          <p class="text-[var(--fg-muted)] leading-relaxed mb-8">
+            中科智衍为您提供完整的决策智能体解决方案，助力企业构建专属数字员工，实现从数据到决策的全链路智能化。
+          </p>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-[var(--card)] border border-[var(--border)] flex items-center justify-center">
+                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm text-[var(--fg-muted)]">官方网站</div>
+                <div class="font-medium">Zenk Official Web</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-[var(--card)] border border-[var(--border)] flex items-center justify-center">
+                <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+              </div>
+              <div>
+                <div class="text-sm text-[var(--fg-muted)]">技术支持</div>
+                <div class="font-medium">服务支持团队</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="reveal" style="transition-delay: 0.2s;">
+          <div class="module-card rounded-2xl p-8">
+            <h3 class="text-xl font-bold mb-6">获取方案详情</h3>
+            <form class="space-y-4">
+              <div>
+                <label class="block text-sm text-[var(--fg-muted)] mb-2">企业名称</label>
+                <input type="text" class="w-full px-4 py-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors" placeholder="请输入企业名称">
+              </div>
+              <div>
+                <label class="block text-sm text-[var(--fg-muted)] mb-2">联系方式</label>
+                <input type="text" class="w-full px-4 py-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors" placeholder="请输入联系电话或邮箱">
+              </div>
+              <div>
+                <label class="block text-sm text-[var(--fg-muted)] mb-2">需求描述</label>
+                <textarea rows="3" class="w-full px-4 py-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors resize-none" placeholder="请简要描述您的需求"></textarea>
+              </div>
+              <button type="submit" class="btn-primary w-full py-4 rounded-xl font-semibold text-[var(--bg)]">
+                提交申请
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="relative py-12 border-t border-[var(--border)]">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
+            <svg class="w-5 h-5 text-[var(--bg)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="font-display font-bold tracking-wider">ZENK</span>
+          <span class="text-[var(--fg-muted)] text-sm">中科智衍</span>
+        </div>
+        <div class="text-sm text-[var(--fg-muted)]">
+          决策智能体解决方案 · 开放生态 · 普及AI应用能力
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 粒子背景
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let animationId = null;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      const particleCount = Math.min(80, Math.floor(window.innerWidth / 20));
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          radius: Math.random() * 2 + 1,
+          opacity: Math.random() * 0.5 + 0.2
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach((p, i) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(0.5, p.radius), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 229, 191, ${p.opacity})`;
+        ctx.fill();
+        
+        particles.slice(i + 1).forEach(p2 => {
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(0, 229, 191, ${0.1 * (1 - dist / 150)})`;
+            ctx.stroke();
+          }
+        });
+      });
+      
+      if (!prefersReducedMotion) {
+        animationId = requestAnimationFrame(drawParticles);
+      }
+    }
+
+    function initParticles() {
+      resizeCanvas();
+      createParticles();
+      if (!prefersReducedMotion) {
+        drawParticles();
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, Math.max(0.5, p.radius), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 229, 191, ${p.opacity})`;
+          ctx.fill();
+        });
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (animationId) cancelAnimationFrame(animationId);
+      initParticles();
+    });
+
+    initParticles();
+
+    // 滚动动画
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // 轮播功能
+    const carousel = document.getElementById('effectCarousel');
+    const slides = carousel.querySelectorAll('.effect-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.remove('active');
+        if (i === index) {
+          slide.classList.add('active');
+        }
+      });
+      
+      dots.forEach((dot, i) => {
+        dot.classList.remove('active');
+        if (i === index) {
+          dot.classList.add('active');
+        }
+      });
+      
+      currentSlide = index;
+    }
+
+    function nextSlide() {
+      const next = (currentSlide + 1) % totalSlides;
+      showSlide(next);
+    }
+
+    function prevSlide() {
+      const prev = (currentSlide - 1 + totalSlides) % totalSlides;
+      showSlide(prev);
+    }
+
+    prevBtn.addEventListener('click', prevSlide);
+    nextBtn.addEventListener('click', nextSlide);
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => showSlide(index));
+    });
+
+    // 自动轮播（可选，每5秒切换）
+    let autoPlayInterval = null;
+    
+    function startAutoPlay() {
+      autoPlayInterval = setInterval(nextSlide, 5000);
+    }
+    
+    function stopAutoPlay() {
+      if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = null;
+      }
+    }
+
+    // 鼠标悬停时暂停自动播放
+    carousel.addEventListener('mouseenter', stopAutoPlay);
+    carousel.addEventListener('mouseleave', startAutoPlay);
+
+    // 启动自动播放
+    if (!prefersReducedMotion) {
+      startAutoPlay();
+    }
+
+    // 平滑滚动导航
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // 表单提交
+    document.querySelector('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button[type="submit"]');
+      const originalText = btn.textContent;
+      btn.textContent = '提交成功';
+      btn.disabled = true;
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        this.reset();
+      }, 2000);
+    });
+
+    // 导航栏滚动效果
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        nav.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+      } else {
+        nav.style.boxShadow = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
