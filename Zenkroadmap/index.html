@@ -153,6 +153,8 @@
     .drawer-section.product-detail.rust-accent .pf-detail-text strong{color:var(--rust)}
     .drawer-hint{flex-shrink:0;padding:14px 28px;border-top:1px solid rgba(0,212,255,0.06);text-align:center;font-size:12px;color:rgba(122,139,168,0.5);letter-spacing:.06em}
     .screenshot-empty{padding:20px;border-radius:14px;background:rgba(255,107,53,0.02);border:1px dashed rgba(255,107,53,0.12);text-align:center;color:rgba(122,139,168,0.45);font-size:13px;line-height:1.6}
+    .screenshot-folder-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:12px 14px;border-radius:14px;background:rgba(255,107,53,0.04);border:1px solid rgba(255,107,53,0.12);font-size:13px;color:var(--muted)}
+    .screenshot-folder-path{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.14);color:var(--gold);font-family:"Orbitron","Avenir Next","PingFang SC",sans-serif;letter-spacing:.04em}
     .screenshot-group{display:grid;gap:18px}
     .screenshot-group-title{font-size:15px;font-weight:700;color:var(--ink);line-height:1.5;padding-bottom:10px;border-bottom:1px solid rgba(255,107,53,0.1)}
     .screenshot-sub-group{margin-left:16px;padding-left:16px;border-left:2px solid rgba(255,107,53,0.15)}
@@ -339,8 +341,8 @@
   <section class="panel section" data-reveal>
     <div class="section-head"><div><span class="label">Visual Context</span><h2>现有架构图可作为研发沟通辅助材料</h2></div><p>仓库内已有架构图资源，适合在后续版本中继续整合到页面里，辅助面向研发、投资人或合作伙伴的技术说明。点击图片可放大查看。</p></div>
     <div class="image-grid">
-      <article class="card image-card" onclick="openLightbox('https://i.imgs.ovh/2026/04/22/ZNvzUd.png')"><img src="https://i.imgs.ovh/2026/04/22/ZNvzUd.png" alt="技术架构图" referrerpolicy="no-referrer"><span class="img-zoom-hint">⤢</span></article>
-      <article class="card image-card" onclick="openLightbox('https://i.imgs.ovh/2026/04/22/ZNvVNO.png')"><img src="https://i.imgs.ovh/2026/04/22/ZNvVNO.png" alt="插件化架构图" referrerpolicy="no-referrer"><span class="img-zoom-hint">⤢</span></article>
+      <article class="card image-card" onclick="openLightbox('../AIMG/Tech_Architecture_Diagram.png')"><img src="../AIMG/Tech_Architecture_Diagram.png" alt="技术架构图"><span class="img-zoom-hint">⤢</span></article>
+      <article class="card image-card" onclick="openLightbox('../AIMG/Zenkplugins.png')"><img src="../AIMG/Zenkplugins.png" alt="插件化架构图"><span class="img-zoom-hint">⤢</span></article>
     </div>
   </section>
 
@@ -406,6 +408,41 @@ var milestones=[
 {month:'第 11 个月',index:'M11',version:'v4.0',title:'v4.0发布·ZENK-AI数字员工2.0与应用商店生态',brief:'ZENK-AI数字员工2.0随装随用、自研智能硬件、应用商店生态完善',goals:['发布v4.0：ZENK-AI数字员工2.0（支持随装随用）、自研智能硬件','应用商店生态完善','官网和商业化入口上线，形成完整对外叙事','支持数字员工应用监控'],outputs:['Agent v4.0版本','ZENK-AI数字员工2.0','自研智能硬件','官网（产品认知、案例浏览、咨询、购买跳转）']},
 {month:'第 12 个月',index:'M12',version:'v5.0',title:'v5.0发布·ZENK_AIoT工业决策平台',brief:'AI+ontology+ZENK-AI数字员工=ZENK_AIoT，形成复制性商业闭环',goals:['发布v5.0工业决策平台（AI+ontology+ZENK-AI数字员工=ZENK_AIoT）','完成第二个客户复制交付，验证行业模板和平台复用效率','证明产品不依赖单次项目，具备标准化复制的商业潜力','ZENK_AIoT平台化管理'],outputs:['Agent v5.0版本','ZENK_AIoT工业决策平台','第二个客户复制交付验证报告','行业模板与私域技能包标准化体系']}
 ];
+var monthImageFiles={
+'1m':['ZenkontologyAgent.png','fangan01.png','jingpin.png','ontology01.png','zhengce.jpg'],
+'2m':['Agent01.png','Agent02.png','Agent03.png','POC01.png','fangan01.png','fangan02.png','fangan03.png','fangan04.png'],
+'3m':['Agent01.png','Agent02.png','Agent03.png','Agent04.png','Agent05.png','ontology01.png','ontology02.png','ontology03.png','ontology4.png'],
+'4m':['1b1f14d563ed2a6b602a64d9b89ecb2d.png','a88de01b3632181562bb095aa8b6022a.png','d8804b40f828d901fc610d9e0f675af5.png'],
+'5m':[],
+'6m':[],
+'7m':[],
+'8m':[],
+'9m':[],
+'10m':[],
+'11m':[],
+'12m':[]
+};
+
+function buildMonthImageCaption(folder,file,index){
+  var base=file.replace(/\.[^.]+$/,'');
+  if(/^[0-9a-f]{24,}$/i.test(base)){return '第 '+folder.replace('m','')+' 个月输出物截图 '+(index+1)}
+  return base;
+}
+
+function buildMonthScreenshots(folder){
+  var files=monthImageFiles[folder]||[];
+  if(!files.length){return []}
+  return [{title:'image/'+folder+' 输出物截图',subs:null,images:files.map(function(file,index){return{caption:buildMonthImageCaption(folder,file,index),url:'../image/'+folder+'/'+file}})}];
+}
+
+milestones.forEach(function(m,index){
+  var folder=(index+1)+'m';
+  var files=monthImageFiles[folder]||[];
+  m.screenshotFolder='image/'+folder;
+  m.screenshotCount=files.length;
+  m.screenshots=buildMonthScreenshots(folder);
+});
+
 var productForms=[
 {key:'cloud',icon:'☁',iconClass:'cloud',title:'公有云产品',brief:'开源Agent免费体验，按需购买连接数据与高级应用。通过ZenkStore获取应用，管理端自助连接企业数据。',accent:'',detail:'<strong>ZenkOntologyAgent</strong>为开源产品，可以在GitHub上下载安装，下载好本身自带一些Ai应用，可以免费试用，如需链接自己的数据需要购买付费。<br><br><strong>ZenkStore</strong>为平台级产品，在ZenkOntologyAgent上加ZenkStore入口，去下载完Ai应用或Ai数字员工安装包之后，上传到ZenkOntologyAgent工具中心，自动加载识别，即可使用。<br><br>链接自己数据时，可以在注册时，要求他们留一个邮箱，可以将管理端的链接，初始账号密码发给公网企业用户，在管理端有数据链接工具，可以按照说明书，自己连接。'},
 {key:'private',icon:'◆',iconClass:'private',title:'私有云部署',brief:'Agent及管理端完整交付，免费体验内置应用。购买正式版后通过管理端接入企业私域数据，按需导入付费应用。',accent:'teal-accent',detail:'产品交付<strong>Agent</strong>及<strong>管理端</strong>，Agent用于业务端，用户可免费体验，时长暂不限制；如果客户需要上传企业自己数据，则需要购买正式版本，购买订阅正式版本的客户，可以通过管理端<strong>ZenkDataLink</strong>数据接入工具进行企业私域数据的接入。<br><br>如果客户需要更多的付费应用，则去公网下载完后，再导入到内网系统的Agent工具中心，Agent自动识别激活。'},
@@ -437,7 +474,7 @@ function buildImgCard(img){var u=img.url.replace(/'/g,"\\'");return'<div class="
 
 var overlay=document.getElementById('drawerOverlay'),panel=document.getElementById('drawerPanel'),closeBtn=document.getElementById('drawerClose'),drawerMonth=document.getElementById('drawerMonth'),drawerVersion=document.getElementById('drawerVersion'),drawerTitle=document.getElementById('drawerTitle'),drawerBody=document.getElementById('drawerBody');
 
-function openDrawer(index){var m=milestones[index];drawerMonth.textContent=m.index+' · '+m.month;if(m.version){drawerVersion.textContent=m.version;drawerVersion.style.display=''}else{drawerVersion.style.display='none'}drawerTitle.textContent=m.title;var h='<div class="drawer-section goals"><div class="drawer-section-title"><span class="drawer-section-icon">◎</span><span class="drawer-section-label">本月关键目标</span></div><div class="drawer-item-list">';m.goals.forEach(function(g){h+='<div class="drawer-item">'+g+'</div>'});h+='</div></div><div class="drawer-section outputs"><div class="drawer-section-title"><span class="drawer-section-icon">◈</span><span class="drawer-section-label">关键输出物</span></div><div class="drawer-item-list">';m.outputs.forEach(function(o){h+='<div class="drawer-item">'+o+'</div>'});h+='</div></div><div class="drawer-section screenshots"><div class="drawer-section-title"><span class="drawer-section-icon">⬒</span><span class="drawer-section-label">输出物截图</span></div>';if(m.screenshots&&m.screenshots.length>0){h+='<div class="screenshot-group">';m.screenshots.forEach(function(grp){h+='<div class="screenshot-group-title">'+grp.title+'</div>';if(grp.subs&&grp.subs.length>0){grp.subs.forEach(function(sub){h+='<div class="screenshot-sub-group"><div class="screenshot-sub-title">'+sub.subTitle+'</div><div class="screenshot-images">';sub.images.forEach(function(img){h+=buildImgCard(img)});h+='</div></div>'})}else if(grp.images&&grp.images.length>0){h+='<div class="screenshot-images">';grp.images.forEach(function(img){h+=buildImgCard(img)});h+='</div>'}});h+='</div>'}else{h+='<div class="screenshot-empty">本月暂无输出物截图</div>'}h+='</div>';drawerBody.innerHTML=h;drawerBody.scrollTop=0;overlay.classList.add('open');panel.classList.add('open');document.body.style.overflow='hidden'}
+function openDrawer(index){var m=milestones[index];drawerMonth.textContent=m.index+' · '+m.month;if(m.version){drawerVersion.textContent=m.version;drawerVersion.style.display=''}else{drawerVersion.style.display='none'}drawerTitle.textContent=m.title;var h='<div class="drawer-section goals"><div class="drawer-section-title"><span class="drawer-section-icon">◎</span><span class="drawer-section-label">本月关键目标</span></div><div class="drawer-item-list">';m.goals.forEach(function(g){h+='<div class="drawer-item">'+g+'</div>'});h+='</div></div><div class="drawer-section outputs"><div class="drawer-section-title"><span class="drawer-section-icon">◈</span><span class="drawer-section-label">关键输出物</span></div><div class="drawer-item-list">';m.outputs.forEach(function(o){h+='<div class="drawer-item">'+o+'</div>'});h+='</div></div><div class="drawer-section screenshots"><div class="drawer-section-title"><span class="drawer-section-icon">⬒</span><span class="drawer-section-label">输出物截图</span></div><div class="screenshot-folder-meta"><span>当前读取目录：<span class="screenshot-folder-path">'+m.screenshotFolder+'</span></span><span>'+(m.screenshotCount>0?'共 '+m.screenshotCount+' 张截图':'当前目录暂无截图')+'</span></div>';if(m.screenshots&&m.screenshots.length>0){h+='<div class="screenshot-group">';m.screenshots.forEach(function(grp){h+='<div class="screenshot-group-title">'+grp.title+'</div>';if(grp.subs&&grp.subs.length>0){grp.subs.forEach(function(sub){h+='<div class="screenshot-sub-group"><div class="screenshot-sub-title">'+sub.subTitle+'</div><div class="screenshot-images">';sub.images.forEach(function(img){h+=buildImgCard(img)});h+='</div></div>'})}else if(grp.images&&grp.images.length>0){h+='<div class="screenshot-images">';grp.images.forEach(function(img){h+=buildImgCard(img)});h+='</div>'}});h+='</div>'}else{h+='<div class="screenshot-empty">本月暂无输出物截图</div>'}h+='</div>';drawerBody.innerHTML=h;drawerBody.scrollTop=0;overlay.classList.add('open');panel.classList.add('open');document.body.style.overflow='hidden'}
 
 function openProductDrawer(index){var pf=productForms[index];drawerMonth.textContent='产品形态';drawerVersion.style.display='none';drawerTitle.textContent=pf.title;drawerBody.innerHTML='<div class="drawer-section product-detail '+pf.accent+'"><div class="drawer-section-title"><span class="drawer-section-icon">'+pf.icon+'</span><span class="drawer-section-label">产品说明</span></div><div class="pf-detail-text">'+pf.detail+'</div></div>';drawerBody.scrollTop=0;overlay.classList.add('open');panel.classList.add('open');document.body.style.overflow='hidden'}
 
