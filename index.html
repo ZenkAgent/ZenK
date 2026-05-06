@@ -341,8 +341,8 @@
   <section class="panel section" data-reveal>
     <div class="section-head"><div><span class="label">Visual Context</span><h2>现有架构图可作为研发沟通辅助材料</h2></div><p>仓库内已有架构图资源，适合在后续版本中继续整合到页面里，辅助面向研发、投资人或合作伙伴的技术说明。点击图片可放大查看。</p></div>
     <div class="image-grid">
-      <article class="card image-card" onclick="openLightbox('../AIMG/Tech_Architecture_Diagram.png')"><img src="../AIMG/Tech_Architecture_Diagram.png" alt="技术架构图"><span class="img-zoom-hint">⤢</span></article>
-      <article class="card image-card" onclick="openLightbox('../AIMG/Zenkplugins.png')"><img src="../AIMG/Zenkplugins.png" alt="插件化架构图"><span class="img-zoom-hint">⤢</span></article>
+      <article class="card image-card" onclick="openLightbox('AIMG/Tech_Architecture_Diagram.png')"><img src="AIMG/Tech_Architecture_Diagram.png" alt="技术架构图"><span class="img-zoom-hint">⤢</span></article>
+      <article class="card image-card" onclick="openLightbox('AIMG/Zenkplugins.png')"><img src="AIMG/Zenkplugins.png" alt="插件化架构图"><span class="img-zoom-hint">⤢</span></article>
     </div>
   </section>
 
@@ -432,7 +432,7 @@ function buildMonthImageCaption(folder,file,index){
 function buildMonthScreenshots(folder){
   var files=monthImageFiles[folder]||[];
   if(!files.length){return []}
-  return [{title:'image/'+folder+' 输出物截图',subs:null,images:files.map(function(file,index){return{caption:buildMonthImageCaption(folder,file,index),url:'../image/'+folder+'/'+file}})}];
+  return [{title:'image/'+folder+' 输出物截图',subs:null,images:files.map(function(file,index){return{caption:buildMonthImageCaption(folder,file,index),url:'image/'+folder+'/'+file}})}];
 }
 
 milestones.forEach(function(m,index){
