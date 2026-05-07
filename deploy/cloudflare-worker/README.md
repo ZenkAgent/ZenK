@@ -11,7 +11,9 @@
 - `index.html` 继续放在 GitHub Pages
 - 页面优先请求 Cloudflare Worker 的 `/api/nav-config`
 - 如果 Worker 暂时不可用，页面会回退到仓库里的静态 `nav-config.json`
+- 同一台设备、同一个浏览器只要曾经成功拿到过最新导航，后续即使离线或断开 VPN，也会优先展示最近缓存
 - 管理员在“设置”里输入口令后，可通过 Worker 把最新导航配置保存到 Cloudflare KV
+- 如果再额外配置 GitHub token，Worker 还能把最新导航同步回仓库根目录的 `nav-config.json`，让新访问的用户也能拿到最新静态导航
 
 ## 目录
 
@@ -62,7 +64,25 @@ wrangler secret put NAV_ADMIN_PASSWORD
 
 如果后面要修改管理员口令，重复执行同一条命令即可，Cloudflare 会用新值覆盖旧值。
 
-6. 部署 Worker
+6. 可选：开启 GitHub 静态同步
+
+如果你希望“新访问的用户”在 Worker 不可达时，也能直接从 GitHub Pages 读到最近一次保存的导航，再补一个 GitHub token：
+
+```bash
+cd deploy/cloudflare-worker
+wrangler secret put GITHUB_TOKEN
+```
+
+建议使用 GitHub fine-grained personal access token，至少授予当前仓库的 `Contents: Read and write` 权限。  
+`wrangler.toml` 里的下面这些值可以按需调整：
+
+- `GITHUB_REPO_OWNER`
+- `GITHUB_REPO_NAME`
+- `GITHUB_REPO_BRANCH`
+- `GITHUB_CONFIG_PATH`
+- `GITHUB_COMMIT_MESSAGE`
+
+7. 部署 Worker
 
 ```bash
 wrangler deploy
@@ -103,5 +123,6 @@ https://zenk-nav-config.xxx.workers.dev
 
 - Worker 只负责导航配置，不影响你页面其他内容
 - 即使 Worker 暂时不可用，页面也仍会用静态 `nav-config.json` 正常展示
+- 如果当前浏览器以前成功拿到过更新后的导航，离线时会优先展示本机缓存，再尝试静态 `nav-config.json`
 - 如果你未来想把截图、其它页面配置也做成在线维护，这个 Worker 模式也能继续扩展
 - 如果你在中国大陆网络下访问 `workers.dev` 仍然不稳定，下一步建议给 Worker 绑定自定义域名，而不是继续使用 `workers.dev`

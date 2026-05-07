@@ -9,3 +9,8 @@ id = "106d137a00794c7aa5716eaa6b85105b"
 
 [vars]
 ALLOWED_ORIGIN = "*"
+GITHUB_REPO_OWNER = "ZenkAgent"
+GITHUB_REPO_NAME = "ZenK"
+GITHUB_REPO_BRANCH = "main"
+GITHUB_CONFIG_PATH = "nav-config.json"
+GITHUB_COMMIT_MESSAGE = "Sync nav-config.json from nav worker"

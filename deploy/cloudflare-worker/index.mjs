@@ -1,4 +1,7 @@
 const CONFIG_KEY = "nav-config";
+const DEFAULT_GITHUB_CONFIG_PATH = "nav-config.json";
+const DEFAULT_GITHUB_BRANCH = "main";
+const DEFAULT_GITHUB_COMMIT_MESSAGE = "Sync nav-config.json from nav worker";
 
 const DEFAULT_CONFIG = {
   version: 1,
@@ -66,6 +69,93 @@ function normalizeConfig(payload) {
     version: 1,
     updatedAt: payload && payload.updatedAt ? String(payload.updatedAt) : new Date().toISOString(),
     items: validItems
+  };
+}
+
+function encodeGitHubPath(path) {
+  return String(path || DEFAULT_GITHUB_CONFIG_PATH)
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
+function encodeBase64Utf8(value) {
+  const bytes = new TextEncoder().encode(String(value || ""));
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+function getGitHubSyncConfig(env) {
+  const owner = env.GITHUB_REPO_OWNER && env.GITHUB_REPO_OWNER.trim();
+  const repo = env.GITHUB_REPO_NAME && env.GITHUB_REPO_NAME.trim();
+  if (!owner || !repo || !env.GITHUB_TOKEN) {
+    return { enabled: false };
+  }
+  return {
+    enabled: true,
+    owner,
+    repo,
+    branch: env.GITHUB_REPO_BRANCH && env.GITHUB_REPO_BRANCH.trim() ? env.GITHUB_REPO_BRANCH.trim() : DEFAULT_GITHUB_BRANCH,
+    path: env.GITHUB_CONFIG_PATH && env.GITHUB_CONFIG_PATH.trim() ? env.GITHUB_CONFIG_PATH.trim() : DEFAULT_GITHUB_CONFIG_PATH,
+    message: env.GITHUB_COMMIT_MESSAGE && env.GITHUB_COMMIT_MESSAGE.trim() ? env.GITHUB_COMMIT_MESSAGE.trim() : DEFAULT_GITHUB_COMMIT_MESSAGE
+  };
+}
+
+async function syncConfigToGitHub(env, config) {
+  const syncConfig = getGitHubSyncConfig(env);
+  if (!syncConfig.enabled) {
+    return { enabled: false };
+  }
+
+  const encodedPath = encodeGitHubPath(syncConfig.path);
+  const baseUrl = `https://api.github.com/repos/${encodeURIComponent(syncConfig.owner)}/${encodeURIComponent(syncConfig.repo)}/contents/${encodedPath}`;
+  const readUrl = `${baseUrl}?ref=${encodeURIComponent(syncConfig.branch)}`;
+  const headers = {
+    Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+    Accept: "application/vnd.github+json",
+    "User-Agent": "zenk-nav-config-worker",
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+
+  let sha = "";
+  const currentFileResponse = await fetch(readUrl, { headers });
+  if (currentFileResponse.status === 200) {
+    const currentFile = await currentFileResponse.json();
+    sha = currentFile && currentFile.sha ? String(currentFile.sha) : "";
+  } else if (currentFileResponse.status !== 404) {
+    const errorText = await currentFileResponse.text();
+    throw new Error(`github_read_failed:${currentFileResponse.status}:${errorText.slice(0, 160)}`);
+  }
+
+  const payload = {
+    message: syncConfig.message,
+    branch: syncConfig.branch,
+    content: encodeBase64Utf8(`${JSON.stringify(config, null, 2)}\n`)
+  };
+  if (sha) payload.sha = sha;
+
+  const writeResponse = await fetch(baseUrl, {
+    method: "PUT",
+    headers: { ...headers, "Content-Type": "application/json; charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!writeResponse.ok) {
+    const errorText = await writeResponse.text();
+    throw new Error(`github_write_failed:${writeResponse.status}:${errorText.slice(0, 160)}`);
+  }
+
+  const writeResult = await writeResponse.json().catch(() => null);
+  return {
+    enabled: true,
+    ok: true,
+    branch: syncConfig.branch,
+    path: syncConfig.path,
+    commitSha: writeResult && writeResult.commit && writeResult.commit.sha ? String(writeResult.commit.sha) : ""
   };
 }
 
@@ -141,7 +231,17 @@ export default {
 
     try {
       const config = await saveConfig(env, payload);
-      return jsonResponse({ ok: true, config }, env, request, { status: 200 });
+      let githubSync = { enabled: false };
+      try {
+        githubSync = await syncConfigToGitHub(env, config);
+      } catch (error) {
+        githubSync = {
+          enabled: getGitHubSyncConfig(env).enabled,
+          ok: false,
+          error: error instanceof Error ? error.message : "github_sync_failed"
+        };
+      }
+      return jsonResponse({ ok: true, config, githubSync }, env, request, { status: 200 });
     } catch (error) {
       return jsonResponse({ error: error instanceof Error ? error.message : "save_failed" }, env, request, { status: 500 });
     }
