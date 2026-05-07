@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-07T00:00:00+08:00",
+  "updatedAt": "2026-05-07T08:05:51.239Z",
   "items": [
     {
       "id": "concept",
@@ -13,14 +13,14 @@
       "id": "domains",
       "name": "产品域",
       "url": "#domains",
-      "parentId": "",
+      "parentId": "concept",
       "order": 20
     },
     {
       "id": "mindmap",
       "name": "能力导图",
       "url": "#mindmap",
-      "parentId": "",
+      "parentId": "concept",
       "order": 30
     },
     {
@@ -41,7 +41,7 @@
       "id": "delivery",
       "name": "执行方式",
       "url": "#delivery",
-      "parentId": "",
+      "parentId": "concept",
       "order": 60
     },
     {
@@ -62,8 +62,50 @@
       "id": "cases",
       "name": "预期效果",
       "url": "#cases",
-      "parentId": "",
+      "parentId": "scenarios",
       "order": 90
+    },
+    {
+      "id": "nav-mov2br4s-rtshf",
+      "name": "产品售卖方案",
+      "url": "https://chat.z.ai/space/r10h03gxpss1-art",
+      "parentId": "product-form",
+      "order": 100
+    },
+    {
+      "id": "nav-mov2fksb-2zczm",
+      "name": "2026 研发里程碑规划",
+      "url": "https://chat.z.ai/space/m134p3h7t5f0-art",
+      "parentId": "modules",
+      "order": 110
+    },
+    {
+      "id": "nav-mov2hzsg-f66ba",
+      "name": "Zenk AI 数字员工优势",
+      "url": "https://chat.z.ai/space/t1amb3nv3kz0-art",
+      "parentId": "",
+      "order": 120
+    },
+    {
+      "id": "nav-mov2o90n-12wnh",
+      "name": "Zenk2026年度产品商业化路线",
+      "url": "https://chat.z.ai/space/d1eht3wf7ge1-art",
+      "parentId": "concept",
+      "order": 130
+    },
+    {
+      "id": "nav-mov2qg7i-mhlip",
+      "name": "ZENK商业模式",
+      "url": "https://chat.z.ai/space/d1rzf2yg41v0-art",
+      "parentId": "concept",
+      "order": 140
+    },
+    {
+      "id": "nav-mov2vlg3-8n8oe",
+      "name": "优势&价值",
+      "url": "https://chat.z.ai/space/j1qnt31vbru1-art",
+      "parentId": "nav-mov2hzsg-f66ba",
+      "order": 150
     }
   ]
 }
