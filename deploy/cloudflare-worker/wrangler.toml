@@ -8,4 +8,4 @@ binding = "NAV_CONFIG_KV"
 id = "106d137a00794c7aa5716eaa6b85105b"
 
 [vars]
-ALLOWED_ORIGIN = "https://zenkagent.github.io"
+ALLOWED_ORIGIN = "*"

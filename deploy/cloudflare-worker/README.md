@@ -46,11 +46,12 @@ wrangler kv namespace create NAV_CONFIG_KV
 cp deploy/cloudflare-worker/wrangler.toml.example deploy/cloudflare-worker/wrangler.toml
 ```
 
-把下面两个值改掉：
+把下面这个值改掉：
 
 - `id` 改成你自己的 KV namespace id
-- `ALLOWED_ORIGIN` 改成你的 GitHub Pages 地址  
-  例如：`https://zenkagent.github.io`
+
+`ALLOWED_ORIGIN` 默认可以保持 `*`，这样本地预览、GitHub Pages 和自定义域名都能访问。  
+如果你后面只想允许单一正式域名，再把它改成你的站点 origin，例如：`https://zenkagent.github.io`
 
 5. 设置管理员口令
 
@@ -101,3 +102,4 @@ https://zenk-nav-config.xxx.workers.dev
 - Worker 只负责导航配置，不影响你页面其他内容
 - 即使 Worker 暂时不可用，页面也仍会用静态 `nav-config.json` 正常展示
 - 如果你未来想把截图、其它页面配置也做成在线维护，这个 Worker 模式也能继续扩展
+- 如果你在中国大陆网络下访问 `workers.dev` 仍然不稳定，下一步建议给 Worker 绑定自定义域名，而不是继续使用 `workers.dev`
