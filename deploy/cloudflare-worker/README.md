@@ -60,6 +60,8 @@ cd deploy/cloudflare-worker
 wrangler secret put NAV_ADMIN_PASSWORD
 ```
 
+如果后面要修改管理员口令，重复执行同一条命令即可，Cloudflare 会用新值覆盖旧值。
+
 6. 部署 Worker
 
 ```bash
