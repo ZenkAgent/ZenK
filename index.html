@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zenk 产品概念到研发里程碑</title>
+  <meta name="zenk-nav-config-api" content="">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config={corePlugins:{preflight:false}}</script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -21,9 +22,18 @@
     .brand-copy strong,.brand-copy span{display:block}
     .brand-copy strong{letter-spacing:0.12em;text-transform:uppercase;font-size:14px;color:var(--ink)}
     .brand-copy span{color:var(--muted);font-size:12px;margin-top:4px}
-    .nav-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-    .nav-links a{text-decoration:none;padding:10px 14px;border-radius:999px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.1);color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;transition:background .3s,color .3s,border-color .3s}
-    .nav-links a:hover{background:rgba(0,212,255,0.12);color:var(--gold);border-color:rgba(0,212,255,0.25)}
+    .nav-links{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+    .nav-links-list{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .nav-link-item{position:relative;display:flex;align-items:center}
+    .nav-links a,.nav-settings-trigger,.nav-dropdown-toggle{text-decoration:none;padding:10px 14px;border-radius:999px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.1);color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;transition:background .3s,color .3s,border-color .3s}
+    .nav-dropdown-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+    .nav-dropdown-toggle::after{content:"▾";font-size:10px;opacity:.8}
+    .nav-settings-trigger{display:inline-flex;align-items:center;gap:8px;font-family:inherit;cursor:pointer}
+    .nav-settings-trigger::before{content:"";width:14px;height:14px;border-radius:50%;border:1px solid currentColor;box-shadow:inset 0 0 0 3px rgba(0,212,255,0.12)}
+    .nav-links a:hover,.nav-settings-trigger:hover,.nav-dropdown-toggle:hover,.nav-link-item.open .nav-dropdown-toggle{background:rgba(0,212,255,0.12);color:var(--gold);border-color:rgba(0,212,255,0.25)}
+    .nav-dropdown-menu{position:absolute;top:calc(100% + 10px);left:0;min-width:220px;padding:10px;border-radius:18px;border:1px solid rgba(0,212,255,0.16);background:rgba(10,16,32,0.98);box-shadow:0 18px 40px rgba(0,0,0,0.42);display:none;z-index:30}
+    .nav-link-item.open .nav-dropdown-menu,.nav-link-item:hover .nav-dropdown-menu,.nav-link-item:focus-within .nav-dropdown-menu{display:grid;gap:8px}
+    .nav-dropdown-menu a{width:100%;text-transform:none;letter-spacing:.04em}
     .hero,.concept-grid,.domain-grid,.module-grid,.mindmap-grid,.map-row,.milestone-grid,.delivery-grid,.risk-grid,.image-grid,.product-form-grid{display:grid;gap:18px}
     .hero{margin-top:24px;grid-template-columns:1.15fr 0.85fr}
     .concept-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -229,9 +239,53 @@
     .solution-item:last-child{margin-bottom:0}
     .result-item{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(0,212,255,0.05);border-radius:8px;margin-bottom:10px}
     .result-item:last-child{margin-bottom:0}
+    .nav-settings-overlay{position:fixed;inset:0;z-index:160;background:rgba(2,4,10,0.82);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}
+    .nav-settings-overlay.open{opacity:1;visibility:visible}
+    .nav-settings-panel{width:min(720px,100%);max-height:90vh;overflow:hidden;border-radius:28px;border:1px solid rgba(0,212,255,0.18);background:linear-gradient(180deg,rgba(11,18,40,0.98),rgba(7,12,26,0.98));box-shadow:0 24px 60px rgba(0,0,0,0.45),0 0 80px rgba(0,212,255,0.06);display:flex;flex-direction:column}
+    .nav-settings-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 24px 0 24px}
+    .nav-settings-copy{display:grid;gap:8px}
+    .nav-settings-copy h3{font-size:24px;line-height:1.2;color:var(--ink)}
+    .nav-settings-copy p{color:var(--muted);font-size:14px;line-height:1.75}
+    .nav-settings-close{width:40px;height:40px;border-radius:14px;border:1px solid rgba(0,212,255,0.12);background:rgba(0,212,255,0.05);color:var(--muted);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .25s,color .25s,border-color .25s;flex-shrink:0}
+    .nav-settings-close:hover{background:rgba(0,212,255,0.12);color:var(--gold);border-color:rgba(0,212,255,0.3)}
+    .nav-settings-divider{height:1px;margin:18px 24px 0 24px;background:linear-gradient(90deg,rgba(0,212,255,0.22),rgba(0,212,255,0.02))}
+    .nav-settings-body{padding:24px;display:grid;gap:24px;overflow-y:auto}
+    .nav-settings-auth{display:grid;gap:14px;padding:18px;border-radius:20px;border:1px solid rgba(0,212,255,0.08);background:rgba(0,212,255,0.03)}
+    .nav-settings-auth-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .nav-settings-auth-head strong{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+    .nav-settings-auth-head span{font-size:12px;color:var(--muted)}
+    .nav-settings-auth-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+    .nav-settings-form{display:grid;gap:16px}
+    .nav-settings-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .nav-settings-field{display:grid;gap:8px}
+    .nav-settings-field span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+    .nav-settings-field input{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(0,212,255,0.12);background:rgba(8,14,28,0.88);color:var(--ink);font-size:14px;outline:none;transition:border-color .25s,box-shadow .25s}
+    .nav-settings-field input:focus{border-color:rgba(0,212,255,0.32);box-shadow:0 0 0 3px rgba(0,212,255,0.08)}
+    .nav-settings-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .nav-settings-save{padding:12px 20px;border-radius:999px;border:1px solid rgba(0,232,157,0.28);background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,232,157,0.18));color:var(--ink);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
+    .nav-settings-save:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(0,212,255,0.14);border-color:rgba(0,232,157,0.45)}
+    .nav-settings-secondary{padding:12px 18px;border-radius:999px;border:1px solid rgba(0,212,255,0.16);background:rgba(0,212,255,0.06);color:var(--ink);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .25s,border-color .25s}
+    .nav-settings-secondary:hover{background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.28)}
+    .nav-settings-status{min-height:20px;color:var(--muted);font-size:13px;line-height:1.5}
+    .nav-settings-lock-note{padding:14px 16px;border-radius:16px;background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.16);color:#f7c59b;font-size:13px;line-height:1.7}
+    .nav-settings-list-wrap{display:grid;gap:14px}
+    .nav-settings-list-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .nav-settings-list-title strong{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+    .nav-settings-list-title span{color:var(--muted);font-size:12px}
+    .nav-settings-list{display:grid;gap:12px}
+    .nav-settings-empty{padding:18px;border-radius:18px;border:1px dashed rgba(0,212,255,0.12);background:rgba(0,212,255,0.03);color:rgba(122,139,168,0.66);font-size:13px;line-height:1.7}
+    .nav-settings-item{display:grid;gap:14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(0,212,255,0.08);background:rgba(16,26,52,0.55)}
+    .nav-settings-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .nav-settings-item-head strong{font-size:15px;color:var(--ink)}
+    .nav-settings-badge{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.12);color:var(--gold);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+    .nav-settings-item-grid{display:grid;grid-template-columns:1.2fr 1.5fr 180px 110px auto;gap:12px;align-items:end}
+    .nav-settings-field select{width:100%;padding:14px 16px;border-radius:16px;border:1px solid rgba(0,212,255,0.12);background:rgba(8,14,28,0.88);color:var(--ink);font-size:14px;outline:none;transition:border-color .25s,box-shadow .25s}
+    .nav-settings-field select:focus{border-color:rgba(0,212,255,0.32);box-shadow:0 0 0 3px rgba(0,212,255,0.08)}
+    .nav-settings-remove{padding:10px 14px;border-radius:999px;border:1px solid rgba(255,107,53,0.22);background:rgba(255,107,53,0.08);color:var(--rust);font-size:12px;font-weight:700;letter-spacing:.05em;cursor:pointer;flex-shrink:0;transition:background .25s,border-color .25s}
+    .nav-settings-remove:hover{background:rgba(255,107,53,0.16);border-color:rgba(255,107,53,0.4)}
     @media(max-width:900px){.modal-content{flex-direction:column;max-height:95vh}.modal-left{width:100%;min-width:auto;border-right:none;border-bottom:1px solid rgba(0,212,255,0.15);padding:20px}.modal-right{padding:20px;max-height:60vh}.case-carousel-wrapper{padding:0 40px}.carousel-btn{width:36px;height:36px}}
-    @media(max-width:1100px){.hero,.mindmap-grid,.delivery-grid,.risk-grid,.image-grid{grid-template-columns:1fr}.concept-grid,.domain-grid,.module-grid,.milestone-grid,.product-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:820px){.shell{width:min(100vw - 20px,100%);padding-top:16px}.nav{flex-direction:column;align-items:flex-start;border-radius:28px}.section,.hero-main,.hero-side,.footer{padding:22px}.section-head{flex-direction:column;align-items:flex-start}.concept-grid,.domain-grid,.module-grid,.milestone-grid,.hero-stats,.image-grid,.product-form-grid{grid-template-columns:1fr}.screenshot-images{grid-template-columns:1fr}}
+    @media(max-width:1100px){.hero,.mindmap-grid,.delivery-grid,.risk-grid,.image-grid{grid-template-columns:1fr}.concept-grid,.domain-grid,.module-grid,.milestone-grid,.product-form-grid,.nav-settings-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:820px){.shell{width:min(100vw - 20px,100%);padding-top:16px}.nav{flex-direction:column;align-items:flex-start;border-radius:28px}.section,.hero-main,.hero-side,.footer{padding:22px}.section-head{flex-direction:column;align-items:flex-start}.concept-grid,.domain-grid,.module-grid,.milestone-grid,.hero-stats,.image-grid,.product-form-grid,.nav-settings-fields,.nav-settings-auth-row,.nav-settings-item-grid{grid-template-columns:1fr}.screenshot-images{grid-template-columns:1fr}.nav-settings-item-head{flex-direction:column;align-items:flex-start}.nav-settings-remove,.nav-settings-secondary,.nav-settings-save{width:100%}}
     @media(max-width:640px){.case-carousel-wrapper{padding:0 10px}.carousel-btn{width:32px;height:32px}.scenario-tab{padding:10px 16px;font-size:13px}}
   </style>
 </head>
@@ -239,8 +293,8 @@
 <div class="shell">
   <nav class="nav">
     <div class="brand"><div class="brand-mark"></div><div class="brand-copy"><strong>ZENK Product Blueprint</strong><span>产品概念 · 产品域 · 研发模块 · 月度里程碑</span></div></div>
-    <div class="nav-links">
-      <a href="#concept">产品概念</a><a href="#domains">产品域</a><a href="#mindmap">能力导图</a><a href="#modules">研发模块</a><a href="#milestones">月度里程碑</a><a href="#delivery">执行方式</a><a href="#product-form">产品形态</a><a href="#scenarios">典型场景</a><a href="#cases">预期效果</a>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-links-list" id="navLinksList"></div><button class="nav-settings-trigger" id="navSettingsTrigger" type="button">设置</button>
     </div>
   </nav>
 
@@ -393,6 +447,68 @@
   </div>
 </div>
 
+<div class="nav-settings-overlay" id="navSettingsOverlay">
+  <div class="nav-settings-panel" role="dialog" aria-modal="true" aria-labelledby="navSettingsTitle">
+    <div class="nav-settings-head">
+      <div class="nav-settings-copy">
+        <span class="label">Navigation Settings</span>
+        <h3 id="navSettingsTitle">维护顶部导航菜单</h3>
+        <p>管理员可以维护现有导航和新增导航，包括名称、URL、排序和菜单层级。普通访问者只会预览最新维护结果。</p>
+      </div>
+      <button class="nav-settings-close" id="navSettingsClose" type="button" aria-label="关闭设置">×</button>
+    </div>
+    <div class="nav-settings-divider"></div>
+    <div class="nav-settings-body">
+      <div class="nav-settings-auth">
+        <div class="nav-settings-auth-head">
+          <strong id="navAdminModeLabel">当前模式：预览</strong>
+          <span>只有管理员口令正确时才允许维护并保存到共享配置</span>
+        </div>
+        <div class="nav-settings-auth-row">
+          <label class="nav-settings-field">
+            <span>管理员口令</span>
+            <input id="navAdminPassword" type="password" maxlength="120" placeholder="输入管理员口令后解锁维护">
+          </label>
+          <button class="nav-settings-secondary" id="navAdminUnlock" type="button">管理员解锁</button>
+        </div>
+      </div>
+      <div class="nav-settings-lock-note" id="navSettingsLockNote">当前为预览模式。输入管理员口令并解锁后，才可以修改名称、URL、排序、层级并保存给所有访问者。</div>
+      <form class="nav-settings-form" id="navSettingsForm">
+        <div class="nav-settings-fields">
+          <label class="nav-settings-field">
+            <span>导航名称</span>
+            <input id="navItemName" type="text" maxlength="24" placeholder="例如：产品文档" required>
+          </label>
+          <label class="nav-settings-field">
+            <span>URL 链接</span>
+            <input id="navItemUrl" type="text" maxlength="500" placeholder="https://example.com 或 #concept" required>
+          </label>
+          <label class="nav-settings-field">
+            <span>菜单层级</span>
+            <select id="navItemParent"></select>
+          </label>
+          <label class="nav-settings-field">
+            <span>排序值</span>
+            <input id="navItemOrder" type="number" min="1" step="1" value="100" required>
+          </label>
+        </div>
+        <div class="nav-settings-actions">
+          <button class="nav-settings-save" id="navAddItemBtn" type="submit">新增导航</button>
+          <button class="nav-settings-secondary" id="navSaveAllBtn" type="button">保存全部变更</button>
+          <div class="nav-settings-status" id="navSettingsStatus" aria-live="polite"></div>
+        </div>
+      </form>
+      <div class="nav-settings-list-wrap">
+        <div class="nav-settings-list-title">
+          <strong>导航结构</strong>
+          <span>支持维护现有菜单与新增菜单</span>
+        </div>
+        <div class="nav-settings-list" id="navManageList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var milestones=[
 {month:'第 1 个月',index:'M1',version:'',title:'明确方向与赛道调研',brief:'聚焦数智大脑、基于本体的BI、Agent形态三大方向，完成行业调研与场景选择',goals:['明确做什么、解决什么问题——聚焦数智大脑、基于本体的BI、Agent形态三大方向','完成目标行业和首个场景选择，输出PRD、试点范围、ROI假设','完成行业政策、同类产品、业务赛道、竞品公司调研','工业规范、行业数据集调研与整理'],outputs:['行业调研XMind（政策、竞品、赛道、市值规模、核心业务、核心技术）','BP 1.0（架构、技术、商业模式、计划）','场景确认文档、客户访谈记录、样板流程图','本体概念图初版、实例数据准备'],screenshots:[{title:'第 1 个月输出物截图如下：',subs:null,images:[{caption:'',url:'https://i.imgs.ovh/2026/04/23/ZNMBdn.png'},{caption:'',url:'https://i.imgs.ovh/2026/04/23/ZNMw7L.png'},{caption:'',url:'https://i.imgs.ovh/2026/04/23/ZNM1zx.png'},{caption:'',url:'https://i.imgs.ovh/2026/04/23/ZNM3HM.png'},{caption:'',url:'https://i.imgs.ovh/2026/04/23/ZNMNwr.jpeg'}]}]},
@@ -448,6 +564,23 @@ var productForms=[
 {key:'private',icon:'◆',iconClass:'private',title:'私有云部署',brief:'Agent及管理端完整交付，免费体验内置应用。购买正式版后通过管理端接入企业私域数据，按需导入付费应用。',accent:'teal-accent',detail:'产品交付<strong>Agent</strong>及<strong>管理端</strong>，Agent用于业务端，用户可免费体验，时长暂不限制；如果客户需要上传企业自己数据，则需要购买正式版本，购买订阅正式版本的客户，可以通过管理端<strong>ZenkDataLink</strong>数据接入工具进行企业私域数据的接入。<br><br>如果客户需要更多的付费应用，则去公网下载完后，再导入到内网系统的Agent工具中心，Agent自动识别激活。'},
 {key:'device',icon:'▣',iconClass:'device',title:'ZENKAi一体机',brief:'插网接电即用，无需购买服务器，无需担心算力不足，省事流畅，效率高。',accent:'rust-accent',detail:'<strong>插网接电即用</strong>，无需购买服务器，无需担心算力不足，省事流畅，效率高。'}
 ];
+function getNavConfigApiUrl(){var runtimeUrl=typeof window!=='undefined'&&window.ZENK_NAV_CONFIG_API_URL?String(window.ZENK_NAV_CONFIG_API_URL).trim():'';var metaNode=document.querySelector('meta[name="zenk-nav-config-api"]');var metaUrl=metaNode&&metaNode.content?String(metaNode.content).trim():'';return runtimeUrl||metaUrl||'/api/nav-config'}
+var NAV_CONFIG_FILE_URL='nav-config.json';
+var NAV_CONFIG_API_URL=getNavConfigApiUrl();
+var defaultNavConfig={version:1,updatedAt:'2026-05-07T00:00:00+08:00',items:[{id:'concept',name:'产品概念',url:'#concept',parentId:'',order:10},{id:'domains',name:'产品域',url:'#domains',parentId:'',order:20},{id:'mindmap',name:'能力导图',url:'#mindmap',parentId:'',order:30},{id:'modules',name:'研发模块',url:'#modules',parentId:'',order:40},{id:'milestones',name:'月度里程碑',url:'#milestones',parentId:'',order:50},{id:'delivery',name:'执行方式',url:'#delivery',parentId:'',order:60},{id:'product-form',name:'产品形态',url:'#product-form',parentId:'',order:70},{id:'scenarios',name:'典型场景',url:'#scenarios',parentId:'',order:80},{id:'cases',name:'预期效果',url:'#cases',parentId:'',order:90}]};
+var navItems=defaultNavConfig.items.map(function(item){return{id:item.id,name:item.name,url:item.url,parentId:item.parentId,order:item.order}});
+var navAdminPassword='';
+var isNavAdminUnlocked=false;
+var navApiAvailable=true;
+
+function shouldOpenInNewTab(url){return /^https?:\/\//i.test(url)}
+function normalizeNavUrl(url){var v=(url||'').trim();if(/^(https?:\/\/|#|\/|\.\/|\.\.\/|mailto:|tel:)/i.test(v))return v;if(/^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(v))return'https://'+v;return v}
+function buildNavItemId(){return'nav-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)}
+function sortNavItems(items){return items.slice().sort(function(a,b){return(Number(a.order)||0)-(Number(b.order)||0)||String(a.name).localeCompare(String(b.name),'zh-CN')})}
+function cloneNavItems(items){return items.map(function(item,index){return sanitizeNavItem(item,index)})}
+function sanitizeNavItem(item,index){return{id:(item&&item.id?String(item.id):buildNavItemId()),name:(item&&item.name?String(item.name):'未命名导航').trim(),url:normalizeNavUrl(item&&item.url?String(item.url):'#'),parentId:(item&&item.parentId?String(item.parentId):''),order:Number.isFinite(Number(item&&item.order))?Number(item.order):(index+1)*10}}
+function normalizeNavConfig(data){var rawItems=Array.isArray(data&&data.items)?data.items:defaultNavConfig.items;var items=cloneNavItems(rawItems);var idMap={};items.forEach(function(item){idMap[item.id]=item});items=items.map(function(item){if(!item.name||!item.url)return null;if(item.parentId===item.id||!idMap[item.parentId])item.parentId='';if(item.parentId&&idMap[item.parentId]&&idMap[item.parentId].parentId)item.parentId='';return item}).filter(Boolean);return{version:1,updatedAt:data&&data.updatedAt?String(data.updatedAt):new Date().toISOString(),items:sortNavItems(items)}}
+function getNextNavOrder(){return(navItems.reduce(function(max,item){return Math.max(max,Number(item.order)||0)},0)||0)+10}
 
 var scenarios=[
 {id:'research',name:'研发',color:'#00d4ff',icon:'<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>',pains:[{title:'知识沉淀困难',desc:'研发流程复杂，实验数据、工艺参数、经验知识分散在不同系统和人员手中，资深专家经验难以有效传承'},{title:'信息孤岛严重',desc:'研发、生产、销售各环节数据割裂，跨部门信息共享依赖人工沟通，历史案例查找困难'},{title:'知识复用率低',desc:'缺乏统一的知识管理体系，隐性经验难以显性化和结构化，新人培养周期长'}],solution:{steps:['知识收集','图谱构建','问答分析'],features:[['结构化信息识别','非结构化信息识别','多源数据接入','实验数据采集'],['概念抽取与关联','知识图谱构建','关系梳理','本体自动演化'],['智能问答','经验复用','决策支持','创新推荐']],results:[{title:'检索效率提升',value:'80%'},{title:'培养周期缩短',value:'50%'},{title:'创新成功率提升',value:'25%'}]}},
@@ -473,6 +606,39 @@ productForms.forEach(function(pf,i){var c=document.createElement('div');c.classN
 function buildImgCard(img){var u=img.url.replace(/'/g,"\\'");return'<div class="screenshot-img-wrap" onclick="openLightbox(\''+u+'\')"><img src="'+img.url+'" alt="'+img.caption+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add(\'img-error\')"><div class="img-fallback"><div class="fallback-icon">&#x2197;</div><div class="fallback-text">图片无法加载</div><a href="'+img.url+'" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">在新窗口打开</a></div><div class="screenshot-img-caption">'+img.caption+'</div></div>'}
 
 var overlay=document.getElementById('drawerOverlay'),panel=document.getElementById('drawerPanel'),closeBtn=document.getElementById('drawerClose'),drawerMonth=document.getElementById('drawerMonth'),drawerVersion=document.getElementById('drawerVersion'),drawerTitle=document.getElementById('drawerTitle'),drawerBody=document.getElementById('drawerBody');
+var navLinksList=document.getElementById('navLinksList');
+var navSettingsOverlay=document.getElementById('navSettingsOverlay');
+var navSettingsTrigger=document.getElementById('navSettingsTrigger');
+var navSettingsClose=document.getElementById('navSettingsClose');
+var navSettingsForm=document.getElementById('navSettingsForm');
+var navItemNameInput=document.getElementById('navItemName');
+var navItemUrlInput=document.getElementById('navItemUrl');
+var navItemParentSelect=document.getElementById('navItemParent');
+var navItemOrderInput=document.getElementById('navItemOrder');
+var navSettingsStatus=document.getElementById('navSettingsStatus');
+var navManageList=document.getElementById('navManageList');
+var navAdminModeLabel=document.getElementById('navAdminModeLabel');
+var navAdminPasswordInput=document.getElementById('navAdminPassword');
+var navAdminUnlockBtn=document.getElementById('navAdminUnlock');
+var navSettingsLockNote=document.getElementById('navSettingsLockNote');
+var navSaveAllBtn=document.getElementById('navSaveAllBtn');
+
+function setNavSettingsStatus(message,isError){navSettingsStatus.textContent=message||'';navSettingsStatus.style.color=isError?'#fca5a5':'var(--teal)'}
+function closeAllNavDropdowns(){document.querySelectorAll('.nav-link-item.open').forEach(function(node){node.classList.remove('open')})}
+function setSelectOptions(select,currentId,selectedParentId){select.innerHTML='';var rootOption=document.createElement('option');rootOption.value='';rootOption.textContent='顶级菜单';select.appendChild(rootOption);sortNavItems(navItems).filter(function(item){return !item.parentId&&item.id!==currentId}).forEach(function(item){var option=document.createElement('option');option.value=item.id;option.textContent=item.name;select.appendChild(option)});select.value=selectedParentId||''}
+function renderNavLinks(){navLinksList.innerHTML='';var sorted=sortNavItems(navItems);var fragment=document.createDocumentFragment();sorted.filter(function(item){return !item.parentId}).forEach(function(item){var children=sorted.filter(function(child){return child.parentId===item.id});var wrapper=document.createElement('div');wrapper.className='nav-link-item';var link=document.createElement('a');link.href=item.url||'#';link.textContent=item.name;if(children.length)link.classList.add('nav-dropdown-toggle');if(shouldOpenInNewTab(item.url)){link.target='_blank';link.rel='noopener noreferrer'}if(children.length&&(item.url==='#'||!item.url)){link.addEventListener('click',function(e){e.preventDefault();wrapper.classList.toggle('open')})}wrapper.appendChild(link);if(children.length){var menu=document.createElement('div');menu.className='nav-dropdown-menu';children.forEach(function(child){var childLink=document.createElement('a');childLink.href=child.url||'#';childLink.textContent=child.name;if(shouldOpenInNewTab(child.url)){childLink.target='_blank';childLink.rel='noopener noreferrer'}menu.appendChild(childLink)});wrapper.appendChild(menu)}fragment.appendChild(wrapper)});navLinksList.appendChild(fragment)}
+function updateNavSettingsMode(){navAdminModeLabel.textContent=isNavAdminUnlocked?'当前模式：管理员维护':'当前模式：预览';navAdminUnlockBtn.textContent=isNavAdminUnlocked?'退出维护':'管理员解锁';navSettingsLockNote.style.display=isNavAdminUnlocked?'none':'';navItemNameInput.disabled=!isNavAdminUnlocked;navItemUrlInput.disabled=!isNavAdminUnlocked;navItemParentSelect.disabled=!isNavAdminUnlocked;navItemOrderInput.disabled=!isNavAdminUnlocked;navSaveAllBtn.disabled=!isNavAdminUnlocked}
+function buildManagedField(labelText,control){var wrapper=document.createElement('label');wrapper.className='nav-settings-field';var label=document.createElement('span');label.textContent=labelText;wrapper.appendChild(label);wrapper.appendChild(control);return wrapper}
+function updateNavItemDraft(id,key,value){var item=navItems.find(function(entry){return entry.id===id});if(!item)return;if(key==='order'){item[key]=Number(value)||0}else if(key==='parentId'){item[key]=value}else{item[key]=value}renderNavLinks()}
+function renderNavManageList(){navManageList.innerHTML='';setSelectOptions(navItemParentSelect,'','');if(!navItems.length){navManageList.innerHTML='<div class="nav-settings-empty">当前没有导航项。请先新增一个导航。</div>';return}sortNavItems(navItems).forEach(function(item){var row=document.createElement('div');row.className='nav-settings-item';var head=document.createElement('div');head.className='nav-settings-item-head';var title=document.createElement('strong');title.textContent=item.name;var badge=document.createElement('span');badge.className='nav-settings-badge';badge.textContent=item.parentId?'二级菜单':'一级菜单';head.appendChild(title);head.appendChild(badge);row.appendChild(head);var grid=document.createElement('div');grid.className='nav-settings-item-grid';var nameInput=document.createElement('input');nameInput.type='text';nameInput.value=item.name;nameInput.disabled=!isNavAdminUnlocked;nameInput.addEventListener('input',function(){updateNavItemDraft(item.id,'name',nameInput.value.trim()||'未命名导航')});var urlInput=document.createElement('input');urlInput.type='text';urlInput.value=item.url;urlInput.disabled=!isNavAdminUnlocked;urlInput.addEventListener('input',function(){updateNavItemDraft(item.id,'url',normalizeNavUrl(urlInput.value))});var parentSelect=document.createElement('select');parentSelect.disabled=!isNavAdminUnlocked;setSelectOptions(parentSelect,item.id,item.parentId);parentSelect.addEventListener('change',function(){updateNavItemDraft(item.id,'parentId',parentSelect.value);renderNavManageList()});var orderInput=document.createElement('input');orderInput.type='number';orderInput.min='1';orderInput.step='1';orderInput.value=String(item.order);orderInput.disabled=!isNavAdminUnlocked;orderInput.addEventListener('input',function(){updateNavItemDraft(item.id,'order',orderInput.value)});var removeBtn=document.createElement('button');removeBtn.type='button';removeBtn.className='nav-settings-remove';removeBtn.textContent='删除';removeBtn.disabled=!isNavAdminUnlocked;removeBtn.addEventListener('click',function(){removeNavItem(item.id)});grid.appendChild(buildManagedField('名称',nameInput));grid.appendChild(buildManagedField('URL',urlInput));grid.appendChild(buildManagedField('层级',parentSelect));grid.appendChild(buildManagedField('排序',orderInput));grid.appendChild(removeBtn);row.appendChild(grid);navManageList.appendChild(row)});navItemOrderInput.value=String(getNextNavOrder())}
+function openNavSettings(){navSettingsOverlay.classList.add('open');document.body.style.overflow='hidden';renderNavManageList();updateNavSettingsMode();setNavSettingsStatus('');(isNavAdminUnlocked?navItemNameInput:navAdminPasswordInput).focus()}
+function closeNavSettings(){navSettingsOverlay.classList.remove('open');document.body.style.overflow=''}
+function removeNavItem(id){navItems=navItems.filter(function(item){return item.id!==id});navItems.forEach(function(item){if(item.parentId===id)item.parentId=''}) ;renderNavLinks();renderNavManageList();setNavSettingsStatus('导航已从当前草稿中移除。别忘了保存全部变更。',false)}
+async function verifyNavAdminPassword(password){var response=await fetch(NAV_CONFIG_API_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Password':password},body:JSON.stringify({verifyOnly:true})});navApiAvailable=response.status!==404;return response}
+async function unlockNavAdmin(){if(isNavAdminUnlocked){isNavAdminUnlocked=false;navAdminPassword='';navAdminPasswordInput.value='';updateNavSettingsMode();renderNavManageList();setNavSettingsStatus('已退出管理员维护模式。',false);navAdminPasswordInput.focus();return}var password=navAdminPasswordInput.value.trim();if(!password){setNavSettingsStatus('请输入管理员口令后再解锁。',true);navAdminPasswordInput.focus();return}try{var response=await verifyNavAdminPassword(password);if(response.status===404){setNavSettingsStatus('当前站点还没有配置保存接口，请先部署 /api/nav-config 服务。',true);return}if(response.status===403){setNavSettingsStatus('管理员口令不正确。',true);navAdminPasswordInput.focus();return}if(response.status===503){setNavSettingsStatus('服务端尚未配置管理员口令，暂时无法解锁维护。',true);return}if(!response.ok)throw new Error('verify_failed');navAdminPassword=password;isNavAdminUnlocked=true;updateNavSettingsMode();renderNavManageList();setNavSettingsStatus('管理员模式已解锁。修改完成后请点击“保存全部变更”。',false);navItemNameInput.focus()}catch(error){setNavSettingsStatus(navApiAvailable?'解锁失败，请稍后重试。':'当前站点还没有配置保存接口，请先部署 /api/nav-config 服务。',true)}}
+function createNavPayload(){return{version:1,updatedAt:new Date().toISOString(),items:sortNavItems(navItems).map(function(item,index){return sanitizeNavItem(item,index)})}}
+async function saveNavConfigToServer(){if(!isNavAdminUnlocked||!navAdminPassword){setNavSettingsStatus('请先以管理员身份解锁。',true);return}var payload=createNavPayload();try{var response=await fetch(NAV_CONFIG_API_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Password':navAdminPassword},body:JSON.stringify(payload)});navApiAvailable=response.status!==404;if(response.status===403){isNavAdminUnlocked=false;navAdminPassword='';updateNavSettingsMode();renderNavManageList();setNavSettingsStatus('管理员口令校验失败，无法保存。',true);navAdminPasswordInput.focus();return}if(response.status===404){setNavSettingsStatus('当前站点还没有配置保存接口，请先部署 /api/nav-config 服务。',true);return}if(response.status===503){setNavSettingsStatus('服务端尚未配置管理员口令，无法保存共享配置。',true);return}if(!response.ok)throw new Error('save_failed');var data=await response.json().catch(function(){return{config:payload}});navItems=normalizeNavConfig(data&&data.config?data.config:payload).items;renderNavLinks();renderNavManageList();setNavSettingsStatus('导航配置已保存，其他人下次打开站点会看到最新版本。',false)}catch(error){setNavSettingsStatus(navApiAvailable?'保存失败，请稍后重试。':'当前站点还没有配置保存接口，请先部署 /api/nav-config 服务。',true)}}
+async function loadNavConfig(){var data=null;try{var apiResponse=await fetch(NAV_CONFIG_API_URL+'?v='+Date.now(),{cache:'no-store'});navApiAvailable=apiResponse.status!==404;if(apiResponse.ok)data=await apiResponse.json()}catch(error){navApiAvailable=false}if(!data){try{var fileResponse=await fetch(NAV_CONFIG_FILE_URL+'?v='+Date.now(),{cache:'no-store'});if(fileResponse.ok)data=await fileResponse.json()}catch(error){}}navItems=normalizeNavConfig(data||defaultNavConfig).items;renderNavLinks();renderNavManageList();updateNavSettingsMode()}
 
 function openDrawer(index){var m=milestones[index];drawerMonth.textContent=m.index+' · '+m.month;if(m.version){drawerVersion.textContent=m.version;drawerVersion.style.display=''}else{drawerVersion.style.display='none'}drawerTitle.textContent=m.title;var h='<div class="drawer-section goals"><div class="drawer-section-title"><span class="drawer-section-icon">◎</span><span class="drawer-section-label">本月关键目标</span></div><div class="drawer-item-list">';m.goals.forEach(function(g){h+='<div class="drawer-item">'+g+'</div>'});h+='</div></div><div class="drawer-section outputs"><div class="drawer-section-title"><span class="drawer-section-icon">◈</span><span class="drawer-section-label">关键输出物</span></div><div class="drawer-item-list">';m.outputs.forEach(function(o){h+='<div class="drawer-item">'+o+'</div>'});h+='</div></div><div class="drawer-section screenshots"><div class="drawer-section-title"><span class="drawer-section-icon">⬒</span><span class="drawer-section-label">输出物截图</span></div><div class="screenshot-folder-meta"><span>当前读取目录：<span class="screenshot-folder-path">'+m.screenshotFolder+'</span></span><span>'+(m.screenshotCount>0?'共 '+m.screenshotCount+' 张截图':'当前目录暂无截图')+'</span></div>';if(m.screenshots&&m.screenshots.length>0){h+='<div class="screenshot-group">';m.screenshots.forEach(function(grp){h+='<div class="screenshot-group-title">'+grp.title+'</div>';if(grp.subs&&grp.subs.length>0){grp.subs.forEach(function(sub){h+='<div class="screenshot-sub-group"><div class="screenshot-sub-title">'+sub.subTitle+'</div><div class="screenshot-images">';sub.images.forEach(function(img){h+=buildImgCard(img)});h+='</div></div>'})}else if(grp.images&&grp.images.length>0){h+='<div class="screenshot-images">';grp.images.forEach(function(img){h+=buildImgCard(img)});h+='</div>'}});h+='</div>'}else{h+='<div class="screenshot-empty">本月暂无输出物截图</div>'}h+='</div>';drawerBody.innerHTML=h;drawerBody.scrollTop=0;overlay.classList.add('open');panel.classList.add('open');document.body.style.overflow='hidden'}
 
@@ -499,13 +665,20 @@ function openCaseModal(id){var c=customerCases.find(function(x){return x.id===id
 function closeCaseModal(){document.getElementById('case-modal').classList.remove('active');document.body.style.overflow=''}
 document.getElementById('modal-close').addEventListener('click',closeCaseModal);
 document.getElementById('case-modal').addEventListener('click',function(e){if(e.target===this)closeCaseModal()});
+navSettingsTrigger.addEventListener('click',openNavSettings);
+navSettingsClose.addEventListener('click',closeNavSettings);
+navSettingsOverlay.addEventListener('click',function(e){if(e.target===navSettingsOverlay)closeNavSettings()});
+navAdminUnlockBtn.addEventListener('click',function(){unlockNavAdmin()});
+navSaveAllBtn.addEventListener('click',function(){saveNavConfigToServer()});
+navSettingsForm.addEventListener('submit',function(e){e.preventDefault();if(!isNavAdminUnlocked){setNavSettingsStatus('当前为预览模式，请先输入管理员口令并解锁。',true);navAdminPasswordInput.focus();return}var name=navItemNameInput.value.trim();var rawUrl=navItemUrlInput.value.trim();var parentId=navItemParentSelect.value||'';var orderValue=Number(navItemOrderInput.value);if(!name){setNavSettingsStatus('请输入导航名称。',true);navItemNameInput.focus();return}if(!rawUrl){setNavSettingsStatus('请输入 URL 链接。',true);navItemUrlInput.focus();return}var normalizedUrl=normalizeNavUrl(rawUrl);if(!/^(https?:\/\/|#|\/|\.\/|\.\.\/|mailto:|tel:)/i.test(normalizedUrl)){setNavSettingsStatus('URL 格式不正确，请输入完整链接或站内锚点。',true);navItemUrlInput.focus();return}if(navItems.some(function(item){return item.name===name&&item.parentId===parentId})){setNavSettingsStatus('同一层级下已经存在同名导航，请更换名称。',true);navItemNameInput.focus();return}navItems.push(sanitizeNavItem({id:buildNavItemId(),name:name,url:normalizedUrl,parentId:parentId,order:orderValue},navItems.length));navItems=normalizeNavConfig({items:navItems}).items;renderNavLinks();renderNavManageList();navSettingsForm.reset();setSelectOptions(navItemParentSelect,'','');navItemOrderInput.value=String(getNextNavOrder());setNavSettingsStatus('导航已加入当前草稿。点击“保存全部变更”后，所有访问者都会看到最新版本。',false);navItemNameInput.focus()});
+document.addEventListener('click',function(e){if(!document.getElementById('navLinks').contains(e.target))closeAllNavDropdowns()});
 
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(document.getElementById('case-modal').classList.contains('active'))closeCaseModal();else if(lightboxOverlay.classList.contains('open'))closeLightbox();else if(panel.classList.contains('open'))closeDrawer()}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(navSettingsOverlay.classList.contains('open'))closeNavSettings();else if(document.getElementById('case-modal').classList.contains('active'))closeCaseModal();else if(lightboxOverlay.classList.contains('open'))closeLightbox();else if(panel.classList.contains('open'))closeDrawer()}});
 
 var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.14});
 document.querySelectorAll('[data-reveal]').forEach(function(n,i){n.style.transitionDelay=Math.min(i*70,420)+'ms';obs.observe(n)});
 
-renderScenarioTabs();renderScenarioContent();renderCases();
+loadNavConfig().finally(function(){renderScenarioTabs();renderScenarioContent();renderCases()});
 </script>
 </body>
 </html>

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "updatedAt": "2026-05-07T00:00:00+08:00",
+  "items": [
+    {
+      "id": "concept",
+      "name": "产品概念",
+      "url": "#concept",
+      "parentId": "",
+      "order": 10
+    },
+    {
+      "id": "domains",
+      "name": "产品域",
+      "url": "#domains",
+      "parentId": "",
+      "order": 20
+    },
+    {
+      "id": "mindmap",
+      "name": "能力导图",
+      "url": "#mindmap",
+      "parentId": "",
+      "order": 30
+    },
+    {
+      "id": "modules",
+      "name": "研发模块",
+      "url": "#modules",
+      "parentId": "",
+      "order": 40
+    },
+    {
+      "id": "milestones",
+      "name": "月度里程碑",
+      "url": "#milestones",
+      "parentId": "",
+      "order": 50
+    },
+    {
+      "id": "delivery",
+      "name": "执行方式",
+      "url": "#delivery",
+      "parentId": "",
+      "order": 60
+    },
+    {
+      "id": "product-form",
+      "name": "产品形态",
+      "url": "#product-form",
+      "parentId": "",
+      "order": 70
+    },
+    {
+      "id": "scenarios",
+      "name": "典型场景",
+      "url": "#scenarios",
+      "parentId": "",
+      "order": 80
+    },
+    {
+      "id": "cases",
+      "name": "预期效果",
+      "url": "#cases",
+      "parentId": "",
+      "order": 90
+    }
+  ]
+}
