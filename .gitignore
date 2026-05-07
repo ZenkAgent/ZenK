@@ -1,1 +1,2 @@
 .DS_Store
+deploy/cloudflare-worker/.wrangler/

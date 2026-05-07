@@ -1,0 +1,11 @@
+name = "zenk-nav-config-zenkagent"
+main = "index.mjs"
+compatibility_date = "2026-05-07"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "NAV_CONFIG_KV"
+id = "106d137a00794c7aa5716eaa6b85105b"
+
+[vars]
+ALLOWED_ORIGIN = "https://zenkagent.github.io"
